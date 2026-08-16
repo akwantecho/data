@@ -27,7 +27,12 @@ through a migration, never by hand.
 Users are global; membership in an organization is a row in `organization_users`
 carrying the role (`ORGANIZATION_ADMIN`, `ANALYST`, `VIEWER`). Platform staff are
 separate: `users.platform_role = PLATFORM_ADMIN`, with no tenant membership
-implied. Only refresh token **hashes** are stored.
+implied.
+
+Passwords are Argon2id hashes. `refresh_tokens` stores only a SHA-256 hash of each
+token, plus a `family_id`: every token rotated from one login shares a family, so
+replaying a rotated token can revoke the whole family (`revoked_reason` records
+why — `ROTATED`, `LOGOUT`, `REUSE_DETECTED`, `MEMBERSHIP_CHANGED`). See ADR-0006.
 
 ### Organization structure — `industries`, `organizations`, `branches`, `departments`
 
@@ -112,6 +117,13 @@ Sprint 0 indexes the access patterns the plan calls out (tenant, date, metric):
 
 Further indexes are added when a real query needs them, verified with `EXPLAIN`.
 
+## Migrations so far
+
+| Migration                   | Contents                                           |
+| --------------------------- | -------------------------------------------------- |
+| `…_initial_platform_schema` | Every domain above (Sprint 0)                      |
+| `…_refresh_token_families`  | `family_id` + `revoked_reason` on `refresh_tokens` |
+
 ## Working with migrations
 
 ```bash
@@ -119,7 +131,23 @@ pnpm --filter @sip/api db:migrate        # create + apply a migration in develop
 pnpm --filter @sip/api db:migrate:deploy # apply pending migrations (CI/production)
 pnpm --filter @sip/api db:reset          # drop and rebuild the development database
 pnpm --filter @sip/api db:generate       # regenerate the Prisma client
+pnpm --filter @sip/api db:seed           # development fixtures (see below)
 ```
 
 CI fails if the committed migrations do not reproduce the schema exactly
 (`prisma migrate diff --exit-code`).
+
+## Development seed
+
+`prisma/seed.ts` is idempotent and creates: one platform admin, the three MVP
+industries, three organizations (healthcare, hospitality, real estate) with two
+branches each, and admin/analyst/viewer users per organization. Every account uses
+`SEED_PASSWORD` (default `Password123!`) — development only.
+
+```text
+platform@sip.local              PLATFORM_ADMIN
+admin@alpha-medical.local       ORGANIZATION_ADMIN   Alpha Medical Group
+analyst@alpha-medical.local     ANALYST
+viewer@alpha-medical.local      VIEWER
+…and the same trio for azure-resorts and meridian-estates
+```

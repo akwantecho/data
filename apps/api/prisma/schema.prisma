@@ -58,18 +58,30 @@ model User {
   @@map("users")
 }
 
+enum RefreshTokenRevocationReason {
+  ROTATED
+  LOGOUT
+  REUSE_DETECTED
+  MEMBERSHIP_CHANGED
+}
+
 model RefreshToken {
-  id         String    @id @default(uuid()) @db.Uuid
-  userId     String    @db.Uuid
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
   /// Only a hash of the refresh token is stored.
-  tokenHash  String    @unique
-  expiresAt  DateTime
-  revokedAt  DateTime?
-  createdAt  DateTime  @default(now())
+  tokenHash String    @unique
+  /// All tokens rotated from one login share a family. Replaying a rotated token
+  /// revokes the whole family, so a stolen token cannot outlive its detection.
+  familyId  String    @db.Uuid
+  expiresAt DateTime
+  revokedAt DateTime?
+  revokedReason RefreshTokenRevocationReason?
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
+  @@index([familyId])
   @@map("refresh_tokens")
 }
 

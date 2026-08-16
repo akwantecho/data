@@ -1,7 +1,11 @@
 import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
 import type { HealthCheckResponse } from '@sip/shared-types';
+import { Public } from '../auth/decorators';
 import { HealthService } from './health.service';
 
+// Monitoring and container healthchecks cannot authenticate; the response carries
+// no tenant data, only service liveness.
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}

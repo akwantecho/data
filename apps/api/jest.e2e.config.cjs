@@ -7,6 +7,8 @@ module.exports = {
   testEnvironment: 'node',
   moduleFileExtensions: ['js', 'json', 'ts'],
   testRegex: 'test/.*\\.e2e-spec\\.ts$',
+  // Must run before the app module is imported: ConfigModule validates eagerly.
+  setupFiles: ['<rootDir>/test/setup-env.ts'],
   transform: {
     '^.+\\.ts$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
   },

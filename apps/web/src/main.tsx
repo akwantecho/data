@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { App } from './app/App';
 import { createQueryClient } from './app/query-client';
+import { SessionProvider } from './features/auth/SessionProvider';
 import './styles/global.css';
 
 const container = document.getElementById('root');
@@ -16,7 +17,9 @@ createRoot(container).render(
   <StrictMode>
     <QueryClientProvider client={createQueryClient()}>
       <BrowserRouter>
-        <App />
+        <SessionProvider>
+          <App />
+        </SessionProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,

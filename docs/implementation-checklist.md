@@ -24,23 +24,25 @@ Legend: `[x]` done · `[ ]` not started
 - [x] README and architecture documentation
 - [x] Sprint 0 completion report
 
-## Sprint 1 — Authentication and multi-tenancy
+## Sprint 1 — Authentication and multi-tenancy ✅
 
-- [ ] Users, password hashing, login
-- [ ] JWT access + refresh token rotation, logout
-- [ ] Organizations and membership, roles
-- [ ] Auth guard, tenant guard, role guard
-- [ ] `GET /auth/me`, `GET /organizations/current`
-- [ ] Platform admin separation
-- [ ] Frontend: login, protected routes, app shell, organization context, user menu
-- [ ] Tests: authorization, token refresh, **cross-organization access denied**
+- [x] Users, Argon2id password hashing, login
+- [x] JWT access + refresh token rotation with reuse detection, logout
+- [x] Organizations and membership, roles
+- [x] Auth guard, tenant/role guard, platform guard (all global by default)
+- [x] `GET /auth/me`, `GET/PATCH /organizations/current`, `POST /auth/switch-organization`
+- [x] Platform admin separation (`GET /platform/organizations`, status change)
+- [x] Audit logging for organization and platform changes
+- [x] Development seed data
+- [x] Frontend: login, protected routes, session context, organization switcher, user menu
+- [x] Tests: authorization, token refresh and reuse, rate limiting, **cross-organization access denied**
 
 ## Sprint 2 — Organization structure
 
 - [ ] Industries and industry selection
 - [ ] Branches CRUD, departments CRUD
-- [ ] Organization settings (country, currency, timezone)
-- [ ] Organization users / team management
+- [x] Organization settings endpoint (country, currency, timezone) — UI in Sprint 2
+- [ ] Organization users / team management (invite, change role, remove)
 - [ ] Frontend: settings, branches, departments, team
 - [ ] Tests: CRUD, tenant isolation, invalid organization references rejected
 

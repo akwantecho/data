@@ -28,16 +28,56 @@ const FALLBACK_ERROR: ApiErrorResponse = {
 
 export interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
+  /** Internal: set while retrying after a token refresh, to stop a refresh loop. */
+  skipRefresh?: boolean;
 }
+
+/** Endpoints that must never trigger the refresh-and-retry path themselves. */
+const AUTH_ENDPOINTS = ['/auth/login', '/auth/refresh', '/auth/logout'];
+
+/**
+ * Tokens are httpOnly cookies, so the client cannot see when the access token
+ * expires. Instead, a 401 triggers one refresh attempt and one retry.
+ *
+ * Concurrent requests share a single refresh call — otherwise a page issuing five
+ * queries would rotate the refresh token five times and trip reuse detection.
+ */
+let refreshInFlight: Promise<boolean> | null = null;
 
 /**
  * Thin fetch wrapper. Business calculations always happen server-side, so the
  * client only transports and renders — it never derives KPI values itself.
  */
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { body, headers, ...rest } = options;
+  const response = await sendRequest(path, options);
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  if (response.status === 401 && !options.skipRefresh && !AUTH_ENDPOINTS.includes(path)) {
+    const refreshed = await refreshSession();
+
+    if (refreshed) {
+      return readResponse<T>(await sendRequest(path, { ...options, skipRefresh: true }));
+    }
+  }
+
+  return readResponse<T>(response);
+}
+
+/** Attempts a single shared token refresh. Resolves to whether the session survives. */
+export function refreshSession(): Promise<boolean> {
+  refreshInFlight ??= sendRequest('/auth/refresh', { method: 'POST' })
+    .then((response) => response.ok)
+    .catch(() => false)
+    .finally(() => {
+      refreshInFlight = null;
+    });
+
+  return refreshInFlight;
+}
+
+async function sendRequest(path: string, options: RequestOptions): Promise<Response> {
+  const { body, headers, skipRefresh: _skipRefresh, ...rest } = options;
+
+  return fetch(`${API_BASE_URL}${path}`, {
     ...rest,
     headers: {
       Accept: 'application/json',
@@ -45,9 +85,12 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       ...headers,
     },
     body: body === undefined ? undefined : JSON.stringify(body),
+    // Session cookies are httpOnly, so they must ride along on every request.
     credentials: 'include',
   });
+}
 
+async function readResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new ApiError(response.status, await readErrorBody(response));
   }

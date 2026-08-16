@@ -2,6 +2,8 @@ import 'reflect-metadata';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import cookieParser from 'cookie-parser';
 import express from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
@@ -12,7 +14,7 @@ const JSON_BODY_LIMIT = '1mb';
 
 async function bootstrap(): Promise<void> {
   // Body parsing is configured explicitly so the size limit is ours, not the default.
-  const app = await NestFactory.create(AppModule, { bodyParser: false });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
   const config = app.get<ConfigService<Env, true>>(ConfigService);
 
   const apiPrefix = config.get('API_PREFIX', { infer: true });
@@ -20,7 +22,11 @@ async function bootstrap(): Promise<void> {
 
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
   app.use(express.urlencoded({ extended: true, limit: JSON_BODY_LIMIT }));
+  app.use(cookieParser());
   app.use(helmet());
+  // Behind Nginx, so client IPs (used for throttling and audit) come from
+  // X-Forwarded-For rather than the proxy's own address.
+  app.set('trust proxy', 1);
   app.enableCors({
     origin: parseCorsOrigins(config.get('CORS_ORIGINS', { infer: true })),
     credentials: true,

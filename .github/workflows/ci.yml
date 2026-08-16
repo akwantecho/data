@@ -35,6 +35,11 @@ jobs:
     env:
       DATABASE_URL: postgresql://sip:sip_test_password@localhost:5432/strategic_intelligence_test?schema=public
       NODE_ENV: test
+      # Throwaway values for CI only — production secrets come from the deployment
+      # environment and are never committed.
+      JWT_ACCESS_SECRET: ci-access-secret-not-used-anywhere-else-0001
+      JWT_REFRESH_SECRET: ci-refresh-secret-not-used-anywhere-else-0002
+      COOKIE_SECURE: 'false'
 
     steps:
       - uses: actions/checkout@v4

@@ -69,3 +69,84 @@ describe('apiRequest', () => {
     await expect(apiRequest('/things/1', { method: 'DELETE' })).resolves.toBeUndefined();
   });
 });
+
+describe('refresh on 401', () => {
+  /** Queues responses per call so a refresh-and-retry sequence can be scripted. */
+  function scriptFetch(responses: Array<{ status: number; body?: unknown }>) {
+    let index = 0;
+    const urls: string[] = [];
+
+    const fetchMock = vi.fn(async (url: string) => {
+      urls.push(url);
+      const next = responses[index] ?? responses[responses.length - 1];
+      index += 1;
+
+      return {
+        ok: next.status >= 200 && next.status < 300,
+        status: next.status,
+        json: async () => next.body ?? {},
+      } as unknown as Response;
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    return { fetchMock, urls };
+  }
+
+  it('refreshes once and retries the original request', async () => {
+    const { urls } = scriptFetch([
+      { status: 401 },
+      { status: 200 },
+      { status: 200, body: { id: 'org-1' } },
+    ]);
+
+    await expect(apiRequest<{ id: string }>('/organizations/current')).resolves.toEqual({
+      id: 'org-1',
+    });
+
+    expect(urls).toEqual([
+      '/api/organizations/current',
+      '/api/auth/refresh',
+      '/api/organizations/current',
+    ]);
+  });
+
+  it('gives up when the refresh also fails', async () => {
+    const unauthenticated = {
+      status: 401,
+      body: { code: 'UNAUTHENTICATED', message: 'Session expired.', details: [] },
+    };
+    const { urls } = scriptFetch([unauthenticated, unauthenticated]);
+
+    await expect(apiRequest('/organizations/current')).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    });
+
+    // One refresh attempt, then the original 401 is surfaced — no retry loop.
+    expect(urls).toEqual(['/api/organizations/current', '/api/auth/refresh']);
+  });
+
+  it('does not try to refresh a failed login', async () => {
+    const { urls } = scriptFetch([{ status: 401 }]);
+
+    await expect(
+      apiRequest('/auth/login', { method: 'POST', body: { email: 'a@b.c', password: 'x' } }),
+    ).rejects.toBeInstanceOf(ApiError);
+
+    expect(urls).toEqual(['/api/auth/login']);
+  });
+
+  it('shares one refresh between concurrent requests', async () => {
+    const { urls } = scriptFetch([
+      { status: 401 },
+      { status: 401 },
+      { status: 200 },
+      { status: 200, body: {} },
+      { status: 200, body: {} },
+    ]);
+
+    await Promise.all([apiRequest('/metrics'), apiRequest('/goals')]);
+
+    // Rotating the refresh token twice would trip server-side reuse detection.
+    expect(urls.filter((url) => url.endsWith('/auth/refresh'))).toHaveLength(1);
+  });
+});

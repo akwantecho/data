@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useSession } from '../features/auth/session-context';
+import { UserMenu } from './UserMenu';
 
 interface NavItem {
   label: string;
@@ -11,9 +13,9 @@ interface NavItem {
 /**
  * Navigation mirrors plan §41. Entries without a route are placeholders for the
  * sprints that build them; they are rendered disabled rather than hidden so the
- * information architecture is visible from Sprint 0.
+ * information architecture is visible from the start.
  */
-const NAV_ITEMS: NavItem[] = [
+const TENANT_NAV: NavItem[] = [
   { label: 'System Status', to: '/system' },
   { label: 'Overview' },
   { label: 'Analytics' },
@@ -26,22 +28,38 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Data Sources', section: 'Data' },
   { label: 'Imports' },
   { label: 'Data Quality' },
-  { label: 'Branches', section: 'Organization' },
+  { label: 'Organization', section: 'Organization' },
+  { label: 'Branches' },
   { label: 'Departments' },
   { label: 'Team' },
-  { label: 'Settings' },
+];
+
+/** Platform staff get their own navigation — they never see tenant screens. */
+const PLATFORM_NAV: NavItem[] = [
+  { label: 'System Status', to: '/system' },
+  { label: 'Organizations', to: '/platform/organizations', section: 'Platform' },
+  { label: 'Industries' },
+  { label: 'Industry Packs' },
+  { label: 'Default Metrics' },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const { isPlatformAdmin, activeMembership } = useSession();
+  const items = isPlatformAdmin ? PLATFORM_NAV : TENANT_NAV;
+
   return (
     <div className="app-shell">
       <aside className="app-shell__sidebar">
         <span className="brand">
           Strategic Intelligence
-          <span className="brand__subtitle">Universal Core</span>
+          <span className="brand__subtitle">
+            {isPlatformAdmin
+              ? 'Platform administration'
+              : (activeMembership?.organizationName ?? 'Universal Core')}
+          </span>
         </span>
         <nav className="nav" aria-label="Main">
-          {NAV_ITEMS.map((item) => (
+          {items.map((item) => (
             <NavEntry key={item.label} item={item} />
           ))}
         </nav>
@@ -49,7 +67,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="app-shell__main">
         <header className="app-shell__topbar">
-          <span className="state">Sprint 0 — platform foundation</span>
+          <span className="state">Sprint 1 — authentication and multi-tenancy</span>
+          <UserMenu />
         </header>
         <main className="app-shell__content">{children}</main>
       </div>

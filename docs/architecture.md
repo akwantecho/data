@@ -1,6 +1,6 @@
 # Architecture
 
-> Status: Sprint 0 (foundation). Product features arrive from Sprint 1 onwards.
+> Status: Sprint 1 complete (foundation, authentication, multi-tenancy).
 
 ## 1. What this system is
 
@@ -59,9 +59,12 @@ Frontend layout (`apps/web/src`): `app/`, `components/` (shared design system),
 ### 4.1 Multi-tenant first
 
 Every tenant-owned table carries `organizationId`. Every query is scoped by it.
-The organization identity comes from the authenticated session (Sprint 1), never
-from a request body or query parameter. `ZodValidationPipe` strips unknown keys,
-so a client cannot smuggle an `organizationId` into a DTO.
+The organization identity comes from the authenticated session, never from a
+request body or query parameter — services receive it through the
+`@OrganizationId()` decorator, which reads the verified access token.
+`ZodValidationPipe` strips unknown keys, so a client cannot smuggle an
+`organizationId` into a DTO, and `AuthorizationGuard` re-reads membership from the
+database on every tenant request so revocation is immediate.
 
 ### 4.2 Calculations are server-side
 
@@ -98,13 +101,17 @@ Critical changes record who, what, when, before, after and organization in
 ```text
 Client → Nginx (prod) / Vite proxy (dev)
       → Helmet + CORS allow-list
-      → ThrottlerGuard (rate limit)
-      → Auth guard + tenant guard          (Sprint 1)
+      → ThrottlerGuard        rate limit, tighter on credential routes
+      → JwtAuthGuard          verifies the access cookie, attaches request.user
+      → AuthorizationGuard    @Roles / @PlatformAdminOnly, re-reads membership
       → Controller (ZodValidationPipe on the DTO)
       → Domain service (organization-scoped)
       → PrismaService → PostgreSQL
       → AllExceptionsFilter on the way out
 ```
+
+Guards are registered globally, so a new controller is authenticated by default;
+exposing a route takes an explicit `@Public()`.
 
 Errors always leave as `{ code, message, details }`. Stack traces, database
 internals and secrets never reach a client.
@@ -124,9 +131,14 @@ See `docs/decisions/` for the ADRs. Summary:
 | Monorepo   | pnpm workspaces                                |
 | Tests      | Jest (API), Vitest + Testing Library (web)     |
 
-## 7. What Sprint 0 deliberately does not include
+## 7. Sprint status
 
-Authentication, tenancy guards, product screens, seed data and industry pack
-content. Those are Sprints 1–5. Sprint 0 proves the foundation: both apps boot,
-the database model exists as a migration, the full request path works, and the
-quality gates run in CI.
+Delivered:
+
+- **Sprint 0** — monorepo, database model, error contract, containers, CI.
+- **Sprint 1** — authentication (ADR-0006), organization membership and roles,
+  tenancy and platform guards, audit logging, login and session UI, seed data.
+
+Not built yet: organization structure CRUD (Sprint 2), imports (3), metrics (4),
+industry pack content (5), dashboard and analytics (6), health/alerts/insights (7),
+goals and decisions (8), AI analyst (9), reports and hardening (10).
