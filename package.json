@@ -1,0 +1,24 @@
+{
+  "name": "strategic-intelligence",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Universal Strategic Intelligence Platform — monorepo root",
+  "packageManager": "pnpm@10.20.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yml,yaml}\"",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "db:migrate": "pnpm --filter @sip/api db:migrate",
+    "db:generate": "pnpm --filter @sip/api db:generate"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}

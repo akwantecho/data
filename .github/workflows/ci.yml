@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  verify:
+    name: Lint, typecheck, build, test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sip
+          POSTGRES_PASSWORD: sip_test_password
+          POSTGRES_DB: strategic_intelligence_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sip -d strategic_intelligence_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://sip:sip_test_password@localhost:5432/strategic_intelligence_test?schema=public
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Generate Prisma client
+        run: pnpm --filter @sip/api exec prisma generate
+
+      - name: Build shared packages
+        run: pnpm --filter @sip/shared-types build
+
+      - name: Lint
+        run: pnpm -r lint
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Apply migrations
+        run: pnpm --filter @sip/api exec prisma migrate deploy
+
+      - name: Verify migrations match the schema
+        run: pnpm --filter @sip/api exec prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma --exit-code
+
+      - name: Build
+        run: pnpm -r build
+
+      - name: Unit tests
+        run: pnpm -r test
+
+      - name: Integration tests
+        run: pnpm --filter @sip/api test:e2e
+
+  docker:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build API image
+        run: docker build -f docker/api.Dockerfile -t sip-api:ci .
+
+      - name: Build web image
+        run: docker build -f docker/web.Dockerfile -t sip-web:ci .

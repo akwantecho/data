@@ -1,0 +1,86 @@
+/*
+ * Design tokens for the executive intelligence UI (plan §23).
+ * Every component reads from these — no ad-hoc colours or spacing in feature code.
+ * Logical properties are used throughout so an RTL locale needs no rewrites.
+ */
+:root {
+  color-scheme: light;
+
+  /* Neutrals */
+  --color-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1f3f6;
+  --color-border: #dfe3e8;
+  --color-text: #16202b;
+  --color-text-muted: #5b6672;
+  --color-text-subtle: #8a949f;
+
+  /* Brand / accent — restrained, data-first */
+  --color-accent: #1f5f9e;
+  --color-accent-strong: #17497a;
+  --color-accent-soft: #e8f0f8;
+
+  /* Semantic status (also used by charts, alerts and health bands) */
+  --color-positive: #1f7a4d;
+  --color-warning: #9a6512;
+  --color-negative: #a32a2a;
+  --color-critical: #7c1d1d;
+  --color-info: #2b5f8a;
+
+  /* Typography */
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* Shape */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+
+  /* Layout */
+  --sidebar-width: 248px;
+  --topbar-height: 60px;
+  --content-max-width: 1440px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --color-bg: #0e141b;
+    --color-surface: #151d26;
+    --color-surface-muted: #1c2731;
+    --color-border: #2a3745;
+    --color-text: #e8edf2;
+    --color-text-muted: #a3b0bd;
+    --color-text-subtle: #7c8a97;
+
+    --color-accent: #5da3e0;
+    --color-accent-strong: #7fbaef;
+    --color-accent-soft: #17293a;
+
+    --color-positive: #4fbf85;
+    --color-warning: #d9a441;
+    --color-negative: #e07070;
+    --color-critical: #f08585;
+    --color-info: #7fb6e0;
+  }
+}

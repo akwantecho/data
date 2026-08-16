@@ -1,0 +1,32 @@
+{
+  "name": "@sip/shared-types",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Universal domain vocabulary shared between the API and the web client",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && node ./scripts/write-cjs-package.mjs",
+    "dev": "tsc -p tsconfig.esm.json --watch",
+    "typecheck": "tsc -p tsconfig.esm.json --noEmit",
+    "lint": "eslint src",
+    "test": "echo \"@sip/shared-types: type-only package, covered by typecheck\""
+  },
+  "devDependencies": {
+    "@sip/config": "workspace:*",
+    "eslint": "^9.39.0",
+    "typescript": "^5.9.3"
+  }
+}

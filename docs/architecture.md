@@ -1,0 +1,132 @@
+# Architecture
+
+> Status: Sprint 0 (foundation). Product features arrive from Sprint 1 onwards.
+
+## 1. What this system is
+
+A multi-tenant strategic intelligence platform. It turns organizational data into
+trusted KPIs, evaluates organizational health, detects change, explains it with
+evidence, and tracks the decisions taken in response.
+
+The value chain the platform implements:
+
+```text
+Trusted Data → Structured Metrics → Business Context → Performance Evaluation
+→ Evidence-Based Insights → Management Attention → Decisions → Measured Outcomes
+```
+
+It is deliberately **not** "charts plus an LLM".
+
+## 2. Universal Core + Industry Packs + Organization Customization
+
+Three layers, in strict order of authority:
+
+| Layer                      | Contains                                                                          | Lives in                                  |
+| -------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------- |
+| Universal Core             | Organization, Branch, Department, Dataset, Metric, Goal, Alert, Insight, Decision | Code + database schema                    |
+| Industry Pack              | Default metrics, health model, insight rules for one industry                     | Database rows (`industry_pack_*` tables)  |
+| Organization Customization | Tenant-owned metrics, targets, thresholds, health weights                         | Database rows scoped by `organization_id` |
+
+Industry vocabulary (patient, room, unit, property) **never** enters core code or
+core tables. A new industry is a data change, not a code change.
+
+## 3. Layout
+
+```text
+strategic-intelligence/
+├── apps/
+│   ├── api/        NestJS REST API — the only authority for calculations
+│   └── web/        React + Vite client — transport and presentation only
+├── packages/
+│   ├── shared-types/   Domain vocabulary + API contracts shared by both apps
+│   └── config/         Shared tsconfig and ESLint bases
+├── docker/         Dockerfiles and Nginx config
+├── docs/           This documentation set
+└── docker-compose.yml
+```
+
+Backend module layout (`apps/api/src`) follows the domains in the plan: `auth`,
+`organizations`, `users`, `industries`, `branches`, `departments`, `data`,
+`imports`, `metrics`, `analytics`, `health`, `alerts`, `insights`, `goals`,
+`decisions`, `ai`, `audit`, `platform`, plus `common` and `prisma`. Sprint 0
+creates `common`, `config`, `prisma` and `health`; each later sprint adds its own.
+
+Frontend layout (`apps/web/src`): `app/`, `components/` (shared design system),
+`features/<domain>/`, `hooks/`, `lib/`, `services/`, `types/`.
+
+## 4. Non-negotiable principles
+
+### 4.1 Multi-tenant first
+
+Every tenant-owned table carries `organizationId`. Every query is scoped by it.
+The organization identity comes from the authenticated session (Sprint 1), never
+from a request body or query parameter. `ZodValidationPipe` strips unknown keys,
+so a client cannot smuggle an `organizationId` into a DTO.
+
+### 4.2 Calculations are server-side
+
+Every number a user sees is computed by the API from stored values. The frontend
+formats and renders; it never derives a KPI. This keeps one source of numeric
+truth and makes the dashboard, reports and AI context provably consistent.
+
+### 4.3 Metrics are data, not code
+
+Metric definitions (unit, aggregation, frequency, direction, formula) live in the
+`metrics` table. No KPI is hardcoded in a React component or a controller.
+
+### 4.4 Determinism before intelligence
+
+Alerts and insights come from explicit rules with recorded evidence. Anything the
+platform asserts must be traceable to numbers the user can inspect.
+
+### 4.5 AI is an explanation layer
+
+```text
+Database → Analytics Engine → Verified KPIs → Insight Context → AI → Explanation
+```
+
+The AI never calculates, never writes to operational data, and receives only
+verified metric context. Missing or low-quality data is disclosed to it and by it.
+
+### 4.6 Auditability
+
+Critical changes record who, what, when, before, after and organization in
+`audit_logs`.
+
+## 5. Request lifecycle
+
+```text
+Client → Nginx (prod) / Vite proxy (dev)
+      → Helmet + CORS allow-list
+      → ThrottlerGuard (rate limit)
+      → Auth guard + tenant guard          (Sprint 1)
+      → Controller (ZodValidationPipe on the DTO)
+      → Domain service (organization-scoped)
+      → PrismaService → PostgreSQL
+      → AllExceptionsFilter on the way out
+```
+
+Errors always leave as `{ code, message, details }`. Stack traces, database
+internals and secrets never reach a client.
+
+## 6. Technology decisions
+
+See `docs/decisions/` for the ADRs. Summary:
+
+| Area       | Choice                                         |
+| ---------- | ---------------------------------------------- |
+| API        | NestJS 11 + TypeScript, REST                   |
+| ORM        | Prisma 6 + PostgreSQL 16                       |
+| Validation | Zod (env, DTOs, rule definitions)              |
+| Client     | React 19, Vite 7, React Router, TanStack Query |
+| Charts     | Apache ECharts                                 |
+| Styling    | Design tokens + hand-written CSS               |
+| Monorepo   | pnpm workspaces                                |
+| Tests      | Jest (API), Vitest + Testing Library (web)     |
+
+## 7. What Sprint 0 deliberately does not include
+
+Authentication, tenancy guards, product screens, seed data and industry pack
+content. Those are Sprints 1–5. Sprint 0 proves the foundation: both apps boot,
+the database model exists as a migration, the full request path works, and the
+quality gates run in CI.

@@ -1,0 +1,27 @@
+{
+  "name": "@sip/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared build/lint configuration for the Strategic Intelligence Platform",
+  "files": [
+    "tsconfig.base.json",
+    "eslint.base.js"
+  ],
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./eslint.base.js": "./eslint.base.js"
+  },
+  "scripts": {
+    "lint": "echo \"@sip/config: nothing to lint\"",
+    "typecheck": "echo \"@sip/config: nothing to typecheck\"",
+    "test": "echo \"@sip/config: no tests\"",
+    "build": "echo \"@sip/config: nothing to build\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "eslint": "^9.39.0",
+    "eslint-config-prettier": "^10.1.8",
+    "typescript-eslint": "^8.46.0"
+  }
+}
