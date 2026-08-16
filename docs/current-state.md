@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: end of Sprint 1.
+Last updated: end of Sprint 2.
 
 ## Repository state before Sprint 0
 
@@ -9,38 +9,42 @@ inherited, adapted or removed; everything described below was created in Sprint 
 
 ## What exists now
 
-| Area              | State                                                                                      |
-| ----------------- | ------------------------------------------------------------------------------------------ |
-| Monorepo          | pnpm workspace: `apps/api`, `apps/web`, `packages/shared-types`, `packages/config`         |
-| API               | NestJS 11 boots, `GET /api/health` reports API + database status                           |
-| Database          | PostgreSQL 16, full initial Prisma model, one applied migration                            |
-| Web               | React 19 + Vite 7 boots, app shell, navigation, System Status page                         |
-| Shared vocabulary | Roles, metric units/frequencies/directions, alert/goal/decision statuses, error envelope   |
-| Error contract    | `{ code, message, details }` via a global exception filter                                 |
-| Validation        | Zod for environment and DTOs (`ZodValidationPipe`)                                         |
-| Security baseline | Helmet, CORS allow-list, rate limiting, 1 MB body cap, Nginx CSP                           |
-| Tooling           | ESLint 9 flat config, Prettier, Jest, Vitest, GitHub Actions CI                            |
-| Containers        | `docker-compose.yml` with db/api/web; multi-stage Dockerfiles                              |
-| Documentation     | Architecture, database, API, industry packs, 6 ADRs, this file                             |
-| Authentication    | Argon2id passwords, httpOnly cookie sessions, rotating refresh tokens with reuse detection |
-| Authorization     | Global auth guard, `@Roles` membership checks, `@PlatformAdminOnly` separation             |
-| Tenancy           | Organization scope from the session only; membership re-read per request                   |
-| Audit             | `AuditService` writing before/after entries for organization and platform changes          |
-| Seed data         | Platform admin, 3 industries, 3 organizations with branches and 3 roles each               |
+| Area                   | State                                                                                      |
+| ---------------------- | ------------------------------------------------------------------------------------------ |
+| Monorepo               | pnpm workspace: `apps/api`, `apps/web`, `packages/shared-types`, `packages/config`         |
+| API                    | NestJS 11 boots, `GET /api/health` reports API + database status                           |
+| Database               | PostgreSQL 16, full initial Prisma model, one applied migration                            |
+| Web                    | React 19 + Vite 7 boots, app shell, navigation, System Status page                         |
+| Shared vocabulary      | Roles, metric units/frequencies/directions, alert/goal/decision statuses, error envelope   |
+| Error contract         | `{ code, message, details }` via a global exception filter                                 |
+| Validation             | Zod for environment and DTOs (`ZodValidationPipe`)                                         |
+| Security baseline      | Helmet, CORS allow-list, rate limiting, 1 MB body cap, Nginx CSP                           |
+| Tooling                | ESLint 9 flat config, Prettier, Jest, Vitest, GitHub Actions CI                            |
+| Containers             | `docker-compose.yml` with db/api/web; multi-stage Dockerfiles                              |
+| Documentation          | Architecture, database, API, industry packs, 6 ADRs, this file                             |
+| Authentication         | Argon2id passwords, httpOnly cookie sessions, rotating refresh tokens with reuse detection |
+| Authorization          | Global auth guard, `@Roles` membership checks, `@PlatformAdminOnly` separation             |
+| Tenancy                | Organization scope from the session only; membership re-read per request                   |
+| Audit                  | `AuditService` writing before/after entries for organization and platform changes          |
+| Seed data              | Platform admin, 3 industries, 3 organizations with branches and 3 roles each               |
+| Organization structure | Industry selection, branches, departments, team management, settings UI                    |
 
 ## Verified locally
 
 - `pnpm -r lint` — clean
 - `pnpm -r typecheck` — clean
 - `pnpm -r build` — API, web and shared types all build
-- `pnpm -r test` — 59 API unit tests, 26 web tests
-- `pnpm --filter @sip/api test:e2e` — 33 integration tests against real PostgreSQL
+- `pnpm -r test` — 85 API unit tests, 45 web tests
+- `pnpm --filter @sip/api test:e2e` — 61 integration tests against real PostgreSQL
 - `prisma migrate deploy` + `prisma migrate diff --exit-code` — migrations reproduce the schema
 - API booted from `dist`: login → `/auth/me` → `/organizations/current` → refresh → logout,
   with platform routes refused to tenants and tenant routes refused to platform staff
 - Full browser run (Chromium): unauthenticated `/system` redirects to `/login`, sign-in
   lands on the app, the user menu shows organization and role, sign-out returns to `/login`,
   and a platform admin sees the platform navigation and the cross-tenant list
+- Full browser run of the settings screens: creating a branch, the duplicate-code
+  conflict surfacing the server message, a department attached to that branch, a role
+  change applying, the organization profile saving, and a viewer seeing no write controls
 
 ## Not verified locally
 
@@ -51,10 +55,9 @@ is proven until someone runs it on a machine with Docker.
 
 ## Not built yet (by design)
 
-Organization structure CRUD and team management (Sprint 2), imports (3), metrics
-engine (4), industry pack content (5), dashboard and analytics (6),
-health/alerts/insights (7), goals and decisions (8), AI analyst (9), reports and
-production hardening (10).
+Imports (Sprint 3), metrics engine (4), industry pack content (5), dashboard and
+analytics (6), health/alerts/insights (7), goals and decisions (8), AI analyst (9),
+reports and production hardening (10).
 
 ## Deviations from the plan document
 
@@ -73,6 +76,13 @@ production hardening (10).
 6. **`POST /auth/switch-organization` is not in the plan's route list.** A user can
    belong to several organizations, so the session needs a supported way to change
    scope; without it the active organization would be unchangeable after login.
-7. **Seed data landed in Sprint 1 rather than Sprint 10.** Plan §48 asks for seeds
+7. **Adding a member sets an initial password instead of sending an invitation.**
+   There is no email infrastructure in the MVP, so an administrator creating an
+   account chooses a first password (≥12 characters) and hands it over. Invitation
+   links and password reset are Phase 2; the plan lists neither for the MVP.
+8. **Branches and departments carrying reported data are deactivated, not deleted.**
+   The plan's "never silently discard data" rule applied to structure: deleting
+   would cascade away metric values, so the API returns `CONFLICT` instead.
+9. **Seed data landed in Sprint 1 rather than Sprint 10.** Plan §48 asks for seeds
    that make the interface demonstrable immediately, and login is not demonstrable
    without users. Metric, goal and decision seeds still follow later.

@@ -66,7 +66,7 @@ Authentication is the default: a route with no marker still requires a valid
 session. Membership is re-read from the database on every tenant request, so
 removing a user or suspending an organization takes effect immediately.
 
-## Implemented (Sprints 0–1)
+## Implemented (Sprints 0–2)
 
 ### `GET /api/health`
 
@@ -144,6 +144,57 @@ The caller's own organization. Any member role.
 `timezone`; everything else is stripped. Writes an `organization.updated` audit
 entry with before/after values. The organization is taken from the session, so an
 `organizationId` in the body is ignored.
+
+### `GET /api/industries`
+
+Active industries, for the selector. Any member role.
+
+### `PUT /api/organizations/current/industry`
+
+`ORGANIZATION_ADMIN` only. Body `{ industryId }`. Refused with `CONFLICT` once the
+organization has metric values or imports (plan §37) — the industry decides the
+metric pack, so a late change would leave history describing a model that no longer
+applies.
+
+### `GET/POST /api/branches`, `GET/PATCH/DELETE /api/branches/:id`
+
+Read for any member role, write for `ORGANIZATION_ADMIN`. `?includeInactive=true`
+returns deactivated branches too; the default hides them.
+
+`code` is unique per organization (`CONFLICT` on collision) and is the identifier
+CSV imports will map to. `DELETE` succeeds only for a branch with no departments and
+no metric values — otherwise `CONFLICT` telling the caller to deactivate instead, so
+reported numbers are never silently destroyed.
+
+### `GET/POST /api/departments`, `GET/PATCH/DELETE /api/departments/:id`
+
+Same access rules and delete policy. `branchId` is optional (null means
+organization-wide) and must belong to the caller's organization — a foreign id is a
+`VALIDATION_ERROR` on the `branchId` field, never a silent accept. Supports
+`?branchId=` and `?includeInactive=`.
+
+### `GET /api/organization-users`
+
+The team. Any member role; passwords and hashes are never included.
+
+### `POST /api/organization-users`
+
+`ORGANIZATION_ADMIN` only. Body `{ email, role, fullName?, temporaryPassword? }`.
+An existing platform user is simply given a membership; an unknown email creates the
+account, which requires `fullName` and an initial `temporaryPassword` (≥12
+characters, mixed case and a digit). Platform staff cannot be added to a tenant.
+
+### `PATCH /api/organization-users/:userId`
+
+`ORGANIZATION_ADMIN` only. Body `{ role }`. Refused with `CONFLICT` when it would
+remove the organization's last administrator.
+
+### `DELETE /api/organization-users/:userId`
+
+`ORGANIZATION_ADMIN` only. Removes the membership, keeping the user account (they
+may belong to other organizations). Access ends on the member's very next request —
+`AuthorizationGuard` re-reads membership rather than trusting the token. Refused for
+the last administrator.
 
 ### `GET /api/platform/organizations`
 

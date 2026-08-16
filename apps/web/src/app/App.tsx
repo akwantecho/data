@@ -3,6 +3,10 @@ import { AppShell } from '../components/AppShell';
 import { LoginPage } from '../features/auth/LoginPage';
 import { ProtectedRoute } from '../features/auth/ProtectedRoute';
 import { PlatformOrganizationsPage } from '../features/platform/PlatformOrganizationsPage';
+import { BranchesPage } from '../features/settings/BranchesPage';
+import { DepartmentsPage } from '../features/settings/DepartmentsPage';
+import { OrganizationSettingsPage } from '../features/settings/OrganizationSettingsPage';
+import { TeamPage } from '../features/settings/TeamPage';
 import { SystemStatusPage } from '../features/system/SystemStatusPage';
 
 export function App() {
@@ -19,6 +23,14 @@ export function App() {
                 <Route path="/" element={<Navigate to="/system" replace />} />
                 <Route path="/system" element={<SystemStatusPage />} />
                 <Route path="/platform/organizations" element={<PlatformOrganizationsPage />} />
+                <Route
+                  path="/settings"
+                  element={<Navigate to="/settings/organization" replace />}
+                />
+                <Route path="/settings/organization" element={<OrganizationSettingsPage />} />
+                <Route path="/settings/branches" element={<BranchesPage />} />
+                <Route path="/settings/departments" element={<DepartmentsPage />} />
+                <Route path="/settings/team" element={<TeamPage />} />
                 <Route path="*" element={<Navigate to="/system" replace />} />
               </Routes>
             </AppShell>

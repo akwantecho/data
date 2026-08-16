@@ -14,8 +14,8 @@ Trusted Data → Structured Metrics → Business Context → Performance Evaluat
 MVP industries: **Healthcare**, **Hospitality / Tourism**, **Real Estate**.
 Architecture: **Universal Core + Industry Packs + Organization Customization**.
 
-> **Status: Sprint 1 complete** — foundation, authentication, multi-tenancy and
-> platform separation. Organization structure lands in Sprint 2.
+> **Status: Sprint 2 complete** — foundation, authentication, multi-tenancy,
+> platform separation and organization structure. Data import lands in Sprint 3.
 > See [`docs/current-state.md`](docs/current-state.md).
 
 ## Stack
@@ -78,7 +78,11 @@ apps/
     src/common/        Error contract, validation pipe
     src/config/        Validated environment
     src/health/        Health endpoint
+    src/branches/      Branch CRUD
+    src/departments/   Department CRUD
+    src/industries/    Industry reference data
     src/organizations/ Tenant-scoped organization profile
+    src/organization-users/ Team management
     src/platform/      Platform administration
   web/                 React client — transport and presentation only
     src/app/           Router, query client

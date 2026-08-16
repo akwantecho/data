@@ -37,14 +37,15 @@ Legend: `[x]` done · `[ ]` not started
 - [x] Frontend: login, protected routes, session context, organization switcher, user menu
 - [x] Tests: authorization, token refresh and reuse, rate limiting, **cross-organization access denied**
 
-## Sprint 2 — Organization structure
+## Sprint 2 — Organization structure ✅
 
-- [ ] Industries and industry selection
-- [ ] Branches CRUD, departments CRUD
-- [x] Organization settings endpoint (country, currency, timezone) — UI in Sprint 2
-- [ ] Organization users / team management (invite, change role, remove)
-- [ ] Frontend: settings, branches, departments, team
-- [ ] Tests: CRUD, tenant isolation, invalid organization references rejected
+- [x] Industries and industry selection (locked once data exists, plan §37)
+- [x] Branches CRUD, departments CRUD, with deactivate-instead-of-delete for
+      structure that carries reported data
+- [x] Organization settings (country, currency, timezone) endpoint and UI
+- [x] Organization users / team management (add, change role, remove; last-admin rule)
+- [x] Frontend: settings, branches, departments, team
+- [x] Tests: CRUD, tenant isolation, invalid organization references rejected
 
 ## Sprint 3 — Data import engine
 

@@ -39,6 +39,12 @@ why — `ROTATED`, `LOGOUT`, `REUSE_DETECTED`, `MEMBERSHIP_CHANGED`). See ADR-00
 An organization belongs to one industry and has many branches; departments hang
 off a branch (or off the organization directly when `branch_id` is null).
 
+`code` is unique per organization on both tables — it is the identifier CSV imports
+map onto, so it must be stable and collision-free within a tenant while staying
+reusable across tenants. Both carry `is_active`: structure that has reported data is
+deactivated rather than deleted, because deleting it would cascade away metric
+values. The services enforce that rule and return `CONFLICT` instead.
+
 ### Data management — `data_sources`, `datasets`, `dataset_columns`, `data_imports`, `data_import_rows`, `data_validation_errors`
 
 An import is an auditable operation. The raw row is preserved in

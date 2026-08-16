@@ -25,3 +25,9 @@ function isValidTimezone(value: string): boolean {
     return false;
   }
 }
+
+export const setIndustrySchema = z.object({
+  industryId: z.string().uuid('A valid industry id is required'),
+});
+
+export type SetIndustryDto = z.infer<typeof setIndustrySchema>;

@@ -1,6 +1,6 @@
 # Architecture
 
-> Status: Sprint 1 complete (foundation, authentication, multi-tenancy).
+> Status: Sprint 2 complete (foundation, authentication, tenancy, organization structure).
 
 ## 1. What this system is
 
@@ -138,7 +138,9 @@ Delivered:
 - **Sprint 0** — monorepo, database model, error contract, containers, CI.
 - **Sprint 1** — authentication (ADR-0006), organization membership and roles,
   tenancy and platform guards, audit logging, login and session UI, seed data.
+- **Sprint 2** — industries and industry selection, branches, departments, team
+  management, organization settings UI.
 
-Not built yet: organization structure CRUD (Sprint 2), imports (3), metrics (4),
+Not built yet: imports (3), metrics (4),
 industry pack content (5), dashboard and analytics (6), health/alerts/insights (7),
 goals and decisions (8), AI analyst (9), reports and hardening (10).

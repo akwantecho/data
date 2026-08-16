@@ -28,10 +28,10 @@ const TENANT_NAV: NavItem[] = [
   { label: 'Data Sources', section: 'Data' },
   { label: 'Imports' },
   { label: 'Data Quality' },
-  { label: 'Organization', section: 'Organization' },
-  { label: 'Branches' },
-  { label: 'Departments' },
-  { label: 'Team' },
+  { label: 'Organization', to: '/settings/organization', section: 'Organization' },
+  { label: 'Branches', to: '/settings/branches' },
+  { label: 'Departments', to: '/settings/departments' },
+  { label: 'Team', to: '/settings/team' },
 ];
 
 /** Platform staff get their own navigation — they never see tenant screens. */
@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="app-shell__main">
         <header className="app-shell__topbar">
-          <span className="state">Sprint 1 — authentication and multi-tenancy</span>
+          <span className="state">Sprint 2 — organization structure</span>
           <UserMenu />
         </header>
         <main className="app-shell__content">{children}</main>

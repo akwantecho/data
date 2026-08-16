@@ -5,6 +5,10 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthorizationGuard } from './auth/guards/authorization.guard';
+import { BranchesModule } from './branches/branches.module';
+import { DepartmentsModule } from './departments/departments.module';
+import { IndustriesModule } from './industries/industries.module';
+import { OrganizationUsersModule } from './organization-users/organization-users.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
 import { HealthModule } from './health/health.module';
@@ -34,7 +38,11 @@ import { validateEnv, type Env } from './config/env';
     AuditModule,
     AuthModule,
     HealthModule,
+    IndustriesModule,
     OrganizationsModule,
+    OrganizationUsersModule,
+    BranchesModule,
+    DepartmentsModule,
     PlatformModule,
   ],
   providers: [

@@ -78,6 +78,79 @@ export class OrganizationsService {
 
     return toSummary(updated);
   }
+
+  /**
+   * Sets the industry, which decides which industry pack an organization gets.
+   *
+   * Plan §37: changing it once data exists is disabled for the MVP. Metrics,
+   * targets and health models are all industry-derived, so a late switch would
+   * leave reported history describing a model that no longer applies.
+   */
+  async setIndustry(
+    organizationId: string,
+    actorId: string,
+    industryId: string,
+    ipAddress?: string,
+  ): Promise<OrganizationSummary> {
+    const organization = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: ORGANIZATION_SELECT,
+    });
+
+    if (!organization) {
+      throw ApiException.notFound('Organization');
+    }
+
+    const industry = await this.prisma.industry.findFirst({
+      where: { id: industryId, isActive: true },
+      select: { id: true },
+    });
+
+    if (!industry) {
+      throw ApiException.validation('The request could not be processed.', [
+        { field: 'industryId', message: 'Unknown industry' },
+      ]);
+    }
+
+    if (organization.industryId === industryId) {
+      return toSummary(organization);
+    }
+
+    if (organization.industryId && (await this.hasReportedData(organizationId))) {
+      throw ApiException.conflict(
+        'The industry cannot be changed after data has been imported. Contact platform support.',
+      );
+    }
+
+    const updated = await this.prisma.organization.update({
+      where: { id: organizationId },
+      data: { industryId },
+      select: ORGANIZATION_SELECT,
+    });
+
+    await this.audit.record({
+      actorId,
+      organizationId,
+      action: 'organization.industry_changed',
+      entityType: 'organization',
+      entityId: organizationId,
+      before: { industryId: organization.industryId },
+      after: { industryId: updated.industryId },
+      ipAddress,
+    });
+
+    return toSummary(updated);
+  }
+
+  /** Any stored measurement or import makes the industry choice load-bearing. */
+  private async hasReportedData(organizationId: string): Promise<boolean> {
+    const [values, imports] = await Promise.all([
+      this.prisma.metricValue.count({ where: { organizationId }, take: 1 }),
+      this.prisma.dataImport.count({ where: { organizationId }, take: 1 }),
+    ]);
+
+    return values > 0 || imports > 0;
+  }
 }
 
 type OrganizationRow = {

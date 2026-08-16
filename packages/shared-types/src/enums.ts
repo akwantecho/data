@@ -16,6 +16,9 @@ export type OrganizationRole = (typeof ORGANIZATION_ROLES)[number];
 export const ORGANIZATION_STATUSES = ['ACTIVE', 'SUSPENDED', 'ARCHIVED'] as const;
 export type OrganizationStatus = (typeof ORGANIZATION_STATUSES)[number];
 
+export const USER_STATUSES = ['ACTIVE', 'INVITED', 'DISABLED'] as const;
+export type UserStatus = (typeof USER_STATUSES)[number];
+
 export const METRIC_UNITS = [
   'CURRENCY',
   'PERCENTAGE',
