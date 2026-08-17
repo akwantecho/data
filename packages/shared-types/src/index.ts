@@ -7,3 +7,4 @@ export * from './metrics.js';
 export * from './industry-packs.js';
 export * from './analytics.js';
 export * from './health.js';
+export * from './goals.js';

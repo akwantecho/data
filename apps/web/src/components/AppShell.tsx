@@ -20,10 +20,10 @@ const TENANT_NAV: NavItem[] = [
   { label: 'Overview', to: '/dashboard' },
   { label: 'Analytics', to: '/analytics' },
   { label: 'Metrics', to: '/metrics' },
-  { label: 'Goals' },
+  { label: 'Goals', to: '/goals' },
   { label: 'Alerts', to: '/alerts' },
   { label: 'Insights', to: '/insights' },
-  { label: 'Decision Center' },
+  { label: 'Decision Center', to: '/decisions' },
   { label: 'Reports' },
   { label: 'AI Analyst' },
   { label: 'Data Sources', to: '/data/sources', section: 'Data' },
@@ -68,7 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="app-shell__main">
         <header className="app-shell__topbar">
-          <span className="state">Sprint 7 — health, alerts and insights</span>
+          <span className="state">Sprint 8 — goals and the decision centre</span>
           <UserMenu />
         </header>
         <main className="app-shell__content">{children}</main>

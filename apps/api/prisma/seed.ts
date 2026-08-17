@@ -4,7 +4,16 @@ import { hash } from '@node-rs/argon2';
 import { installPack, packForIndustry } from '../src/industry-packs/pack-install';
 import { syncPackCatalogue } from '../src/industry-packs/pack-sync';
 import { CalculationService } from '../src/metrics/calculation.service';
+import { AnalyticsService } from '../src/analytics/analytics.service';
+import { AuditService } from '../src/audit/audit.service';
+import { DataQualityService } from '../src/data-quality/data-quality.service';
+import { OrganizationHealthService } from '../src/organization-health/organization-health.service';
+import { AlertsService } from '../src/alerts/alerts.service';
+import { InsightsService } from '../src/insights/insights.service';
+import { GoalsService } from '../src/goals/goals.service';
+import { AnalysisService } from '../src/analysis/analysis.service';
 import { seedSampleHistory } from './sample-history';
+import { seedSampleGoals } from './sample-goals';
 
 /**
  * Development seed.
@@ -14,11 +23,40 @@ import { seedSampleHistory } from './sample-history';
  * sign-in, tenant isolation and the import wizard are all demonstrable straight
  * away. It then syncs the industry pack catalogue and installs each organization's
  * pack, exactly as choosing an industry through the API would, and reports twelve
- * months of sample figures (plan §48) so the dashboard has a trend to draw.
+ * months of sample figures (plan §48) so the dashboard has a trend to draw. Finally
+ * it runs the real analysis stack over that history and sets goals and a decision on
+ * top of what it produced, so the plan §49 demonstration works on a fresh database
+ * without anyone importing anything first.
  *
  * Idempotent: safe to run repeatedly.
  */
 const prisma = new PrismaClient();
+
+/**
+ * The real services, constructed by hand.
+ *
+ * The seed runs outside Nest, so there is no injector — but it must run the same
+ * code the API runs, not a simplified copy of it, or the seeded figures would stop
+ * matching what the product would have produced.
+ */
+const analytics = new AnalyticsService(prisma as never);
+const goals = new GoalsService(
+  prisma as never,
+  new AuditService(prisma as never),
+  analytics,
+);
+const analysis = new AnalysisService(
+  prisma as never,
+  new OrganizationHealthService(prisma as never, analytics),
+  new AlertsService(
+    prisma as never,
+    new AuditService(prisma as never),
+    new DataQualityService(prisma as never),
+    analytics,
+  ),
+  new InsightsService(prisma as never, analytics),
+  goals,
+);
 
 const DEV_PASSWORD = process.env.SEED_PASSWORD ?? 'Password123!';
 
@@ -198,6 +236,28 @@ async function main(): Promise<void> {
     console.log(
       `  ${definition.name}: ${history.values} sample values, ${history.targets} targets, ` +
         `${history.thresholds} thresholds, ${calculated.calculated} calculated`,
+    );
+
+    // The three engines, over every period with data — the same order an import
+    // commit runs them in (plan §49). Goals and the decision are set on top of what
+    // they produced, so the decision cites alerts and insights that really fired.
+    const periods = await prisma.metricValue.findMany({
+      where: { organizationId: organization.id },
+      distinct: ['periodType', 'periodStart'],
+      orderBy: { periodStart: 'asc' },
+      select: { periodType: true, periodStart: true },
+    });
+
+    const analysed = await analysis.run(organization.id, periods);
+    const seededGoals = await seedSampleGoals(prisma, organization.id, definition.industry);
+    const progress = await goals.recalculate(organization.id);
+
+    console.log(
+      `  ${definition.name}: analysed ${analysed.periods.length} periods ` +
+        `(${analysed.periods.reduce((total, run) => total + run.alerts.created, 0)} alerts, ` +
+        `${analysed.periods.reduce((total, run) => total + run.insights.created, 0)} insights), ` +
+        `${seededGoals.goals} goals, ${seededGoals.decisions} decisions, ` +
+        `${progress.changed} goals scored`,
     );
 
     const existingSource = await prisma.dataSource.findFirst({

@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { AnalysisRunResult, PeriodType } from '@sip/shared-types';
+import type { AnalysisRun, AnalysisRunResult, PeriodType } from '@sip/shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { AlertsService } from '../alerts/alerts.service';
+import { GoalsService } from '../goals/goals.service';
 import { InsightsService } from '../insights/insights.service';
 import { OrganizationHealthService } from '../organization-health/organization-health.service';
 
@@ -14,7 +15,9 @@ import { OrganizationHealthService } from '../organization-health/organization-h
  * commit triggers it.
  *
  * Health first, because an alert about a period should not be raised against a
- * score that has not caught up with it.
+ * score that has not caught up with it. Goals follow the three engines: a goal
+ * reads the same metric figures, so it is refreshed once the period's analysis has
+ * settled (plan §29).
  */
 @Injectable()
 export class AnalysisService {
@@ -25,6 +28,7 @@ export class AnalysisService {
     private readonly health: OrganizationHealthService,
     private readonly alerts: AlertsService,
     private readonly insights: InsightsService,
+    private readonly goals: GoalsService,
   ) {}
 
   /** Runs everything for the periods given, or for the latest period with data. */
@@ -32,7 +36,7 @@ export class AnalysisService {
     organizationId: string,
     periods?: Array<{ periodType: PeriodType; periodStart: Date }>,
     actorId?: string,
-  ): Promise<AnalysisRunResult[]> {
+  ): Promise<AnalysisRun> {
     const scope = periods ?? (await this.latestPeriod(organizationId));
     const results: AnalysisRunResult[] = [];
 
@@ -53,7 +57,11 @@ export class AnalysisService {
       this.logger.warn(`No periods with data for organization ${organizationId}; nothing analysed`);
     }
 
-    return results;
+    // Once for the run, not once per period: a goal spans its own window rather
+    // than a single reporting period.
+    const goals = await this.goals.recalculate(organizationId, actorId);
+
+    return { periods: results, goals };
   }
 
   private async latestPeriod(

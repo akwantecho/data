@@ -4,6 +4,10 @@ import { LoginPage } from '../features/auth/LoginPage';
 import { ProtectedRoute } from '../features/auth/ProtectedRoute';
 import { AnalyticsPage } from '../features/analytics/AnalyticsPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
+import { DecisionCentrePage } from '../features/decisions/DecisionCentrePage';
+import { DecisionDetailPage } from '../features/decisions/DecisionDetailPage';
+import { GoalDetailPage } from '../features/goals/GoalDetailPage';
+import { GoalsPage } from '../features/goals/GoalsPage';
 import { AlertsPage } from '../features/health/AlertsPage';
 import { InsightsPage } from '../features/health/InsightsPage';
 import { PlatformOrganizationsPage } from '../features/platform/PlatformOrganizationsPage';
@@ -35,6 +39,10 @@ export function App() {
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/goals" element={<GoalsPage />} />
+                <Route path="/goals/:id" element={<GoalDetailPage />} />
+                <Route path="/decisions" element={<DecisionCentrePage />} />
+                <Route path="/decisions/:id" element={<DecisionDetailPage />} />
                 <Route path="/alerts" element={<AlertsPage />} />
                 <Route path="/insights" element={<InsightsPage />} />
                 <Route path="/system" element={<SystemStatusPage />} />

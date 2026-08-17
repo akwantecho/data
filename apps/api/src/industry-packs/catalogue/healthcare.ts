@@ -215,6 +215,23 @@ export const healthcarePack: PackDefinition = {
         evidence: ['revenue', 'patients', 'revenue_per_patient'],
       },
     },
+    {
+      code: 'capacity_available_for_growth',
+      name: 'Demand is growing while capacity is spare',
+      description:
+        'An opportunity rather than a problem: the decision centre reads INFO insights as its opportunities.',
+      severity: 'INFO',
+      category: 'Utilization',
+      definition: {
+        conditions: [
+          { metric: 'appointments', measure: 'CHANGE_PCT', operator: 'GT', value: 5 },
+          { metric: 'doctor_utilization', measure: 'VALUE', operator: 'LT', value: 75 },
+        ],
+        narrative:
+          'Appointment demand is rising while doctors are under three quarters utilized. There is room to take on more patients before capacity has to be added.',
+        evidence: ['appointments', 'doctor_utilization', 'revenue_per_patient'],
+      },
+    },
   ],
   alertRules: [
     {

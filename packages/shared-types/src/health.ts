@@ -1,4 +1,5 @@
 import type { AlertSeverity, AlertStatus, HealthBand, PeriodType } from './enums.js';
+import type { GoalProgressResult } from './goals.js';
 
 /**
  * How one metric scored inside a category (plan §26).
@@ -164,4 +165,16 @@ export interface AnalysisRunResult {
   health: HealthRecalculationResult;
   alerts: AlertEvaluationResult;
   insights: InsightGenerationResult;
+}
+
+/**
+ * One analysis run.
+ *
+ * Health, alerts and insights are period-scoped, so they are reported per period.
+ * Goals are not — a goal spans its own window — so goal progress is refreshed once
+ * for the run and reported once.
+ */
+export interface AnalysisRun {
+  periods: AnalysisRunResult[];
+  goals: GoalProgressResult;
 }

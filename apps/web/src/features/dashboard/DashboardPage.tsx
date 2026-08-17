@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import type { DashboardOverview } from '@sip/shared-types';
+import type { DashboardOverview, GoalStatus } from '@sip/shared-types';
 import { PageHeader } from '../../components/PageHeader';
 import { EmptyState, ErrorState, LoadingState } from '../../components/states';
 import { FilterBar, type AnalyticsFilterState } from '../../components/FilterBar';
@@ -9,6 +9,7 @@ import { KpiCard } from '../../components/KpiCard';
 import { SeriesChart } from '../../components/SeriesChart';
 import { describeApiError } from '../../lib/errors';
 import { useOrganization } from '../organization/organization-context';
+import { GoalProgressBar } from '../goals/GoalProgressBar';
 import { HealthPanel } from '../health/HealthPanel';
 import { analyticsKeys, fetchAnalyticsOptions, fetchOverview } from './dashboard-api';
 
@@ -151,6 +152,7 @@ export function DashboardPage() {
             />
             <AttentionPanel
               title="Decisions needing attention"
+              to="/decisions"
               emptyMessage="No open decisions."
               items={overview.attention.decisions.map((decision) => ({
                 id: decision.id,
@@ -159,6 +161,36 @@ export function DashboardPage() {
               }))}
             />
           </div>
+
+          <section className="card stack">
+            <div className="section-header">
+              <h2 className="card__title">Goal performance</h2>
+              <Link className="button button--ghost" to="/goals">
+                All goals
+              </Link>
+            </div>
+            {overview.attention.goals.length === 0 ? (
+              <EmptyState message="No goals are in flight. A goal linked to a metric keeps its own progress current." />
+            ) : (
+              <ul className="stack">
+                {overview.attention.goals.map((goal) => (
+                  <li key={goal.id} className="stack">
+                    <div className="section-header">
+                      <Link to={`/goals/${goal.id}`}>{goal.title}</Link>
+                      <span className="data-table__meta">
+                        {goal.status.toLowerCase().replace(/_/g, ' ')} · due {goal.dueDate}
+                      </span>
+                    </div>
+                    <GoalProgressBar
+                      progressPct={goal.progressPct}
+                      expectedProgressPct={goal.expectedProgressPct}
+                      status={goal.status as GoalStatus}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
 
           <section className="card stack">
             <h2 className="card__title">Data behind these numbers</h2>

@@ -258,7 +258,7 @@ describe('Health, alerts and insights (e2e)', () => {
       const agent = await signIn(admin.email);
 
       const run = await agent.post('/api/analysis/run').expect(200);
-      expect(run.body[0].health.periodsScored).toBe(1);
+      expect(run.body.periods[0].health.periodsScored).toBe(1);
 
       const response = await agent.get('/api/health/current').expect(200);
       const current = response.body.current;
@@ -388,9 +388,9 @@ describe('Health, alerts and insights (e2e)', () => {
       const first = await agent.post('/api/analysis/run').expect(200);
       const second = await agent.post('/api/analysis/run').expect(200);
 
-      expect(second.body[0].alerts.created).toBe(0);
-      expect(second.body[0].alerts.unchanged).toBeGreaterThanOrEqual(
-        first.body[0].alerts.unchanged,
+      expect(second.body.periods[0].alerts.created).toBe(0);
+      expect(second.body.periods[0].alerts.unchanged).toBeGreaterThanOrEqual(
+        first.body.periods[0].alerts.unchanged,
       );
 
       const count = await prisma.alert.count({
@@ -456,7 +456,7 @@ describe('Health, alerts and insights (e2e)', () => {
       });
 
       const run = await agent.post('/api/analysis/run').expect(200);
-      expect(run.body[0].alerts.resolved).toBeGreaterThanOrEqual(1);
+      expect(run.body.periods[0].alerts.resolved).toBeGreaterThanOrEqual(1);
 
       const after = await prisma.alert.findUniqueOrThrow({
         where: { id: before.id },
@@ -596,7 +596,7 @@ describe('Health, alerts and insights (e2e)', () => {
 
       const runs = await agent.post('/api/analysis/run').expect(200);
 
-      expect(runs.body[0].period).toBe('2026-02-01');
+      expect(runs.body.periods[0].period).toBe('2026-02-01');
       expect(before).toBeGreaterThan(0);
 
       const january = await prisma.insight.count({
@@ -649,7 +649,7 @@ describe('Health, alerts and insights (e2e)', () => {
 
       const run = await stranger.post('/api/analysis/run').expect(200);
 
-      expect(run.body).toEqual([]);
+      expect(run.body.periods).toEqual([]);
     });
 
     it('refuses an unauthenticated caller', async () => {

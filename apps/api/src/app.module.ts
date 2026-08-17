@@ -11,6 +11,7 @@ import { AuthorizationGuard } from './auth/guards/authorization.guard';
 import { BranchesModule } from './branches/branches.module';
 import { DataQualityModule } from './data-quality/data-quality.module';
 import { DataSourcesModule } from './data-sources/data-sources.module';
+import { DecisionsModule } from './decisions/decisions.module';
 import { ImportsModule } from './imports/imports.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { DepartmentsModule } from './departments/departments.module';
@@ -19,6 +20,7 @@ import { IndustryPacksModule } from './industry-packs/industry-packs.module';
 import { OrganizationUsersModule } from './organization-users/organization-users.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
+import { GoalsModule } from './goals/goals.module';
 import { HealthModule } from './health/health.module';
 import { InsightsModule } from './insights/insights.module';
 import { OrganizationHealthModule } from './organization-health/organization-health.module';
@@ -63,6 +65,8 @@ import { validateEnv, type Env } from './config/env';
     AlertsModule,
     InsightsModule,
     AnalysisModule,
+    GoalsModule,
+    DecisionsModule,
     PlatformModule,
   ],
   providers: [

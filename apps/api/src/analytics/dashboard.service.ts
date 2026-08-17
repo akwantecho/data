@@ -8,6 +8,7 @@ import type {
 } from '@sip/shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { DataQualityService } from '../data-quality/data-quality.service';
+import { expectedProgressFor } from '../goals/goal-progress';
 import { AnalyticsService, type AnalyticsContext } from './analytics.service';
 import type { AnalyticsFiltersDto } from './analytics.dto';
 
@@ -236,10 +237,19 @@ export class DashboardService {
         select: { id: true, title: true, severity: true, createdAt: true },
       }),
       this.prisma.goal.findMany({
-        where: { organizationId, status: { in: ['ACTIVE', 'AT_RISK'] } },
-        orderBy: { updatedAt: 'desc' },
+        // Every goal still in flight, worst first: a goal off track is the one the
+        // panel exists to surface.
+        where: { organizationId, status: { in: ['ACTIVE', 'ON_TRACK', 'AT_RISK', 'OFF_TRACK'] } },
+        orderBy: [{ progressPct: 'asc' }, { dueDate: 'asc' }],
         take: 5,
-        select: { id: true, title: true, status: true, progressPct: true },
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          progressPct: true,
+          startDate: true,
+          dueDate: true,
+        },
       }),
       this.prisma.decision.findMany({
         where: { organizationId, status: { in: ['OPEN', 'APPROVED', 'IN_PROGRESS'] } },
@@ -268,6 +278,9 @@ export class DashboardService {
         title: goal.title,
         status: goal.status,
         progressPct: goal.progressPct?.toString() ?? null,
+        expectedProgressPct:
+          expectedProgressFor(goal.startDate, goal.dueDate, new Date())?.toString() ?? null,
+        dueDate: goal.dueDate.toISOString().slice(0, 10),
       })),
       decisions: decisions.map((decision) => ({
         id: decision.id,

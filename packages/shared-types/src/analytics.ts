@@ -121,7 +121,15 @@ export interface DashboardAttention {
     createdAt: string;
   }>;
   insights: Array<{ id: string; title: string; severity: string; createdAt: string }>;
-  goals: Array<{ id: string; title: string; status: string; progressPct: string | null }>;
+  goals: Array<{
+    id: string;
+    title: string;
+    status: string;
+    progressPct: string | null;
+    /** Where the goal should be by now, so the panel can show pace, not just position. */
+    expectedProgressPct: string | null;
+    dueDate: string;
+  }>;
   decisions: Array<{ id: string; title: string; status: string; createdAt: string }>;
 }
 

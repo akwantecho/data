@@ -363,6 +363,59 @@ Any member role. Paginated, filterable by `severity` and `category`. Every insig
 carries its narrative and one evidence row per figure it quotes, including which
 condition that figure satisfied.
 
+### `GET /api/goals`, `GET /api/goals/:id`
+
+Any member role. `GET /api/goals` filters by `status` and `ownerId`. Every goal
+carries the progress the system calculated, where the calendar says it should be by
+now, and the metric that drives it. Nothing is client-calculated.
+
+### `POST /api/goals`, `PATCH /api/goals/:id`, `DELETE /api/goals/:id`
+
+`ORGANIZATION_ADMIN` or `ANALYST`. A goal needs a title, a target, a start date and a
+due date; linking a `metricId` makes it maintain its own progress. Deleting a goal a
+decision cites as evidence is refused with `CONFLICT` — cancel it instead.
+
+### `POST /api/goals/:id/notes`
+
+`ORGANIZATION_ADMIN` or `ANALYST`. Body `{ note }`. Recorded in the same history as
+the automatic entries, against the goal's current figures.
+
+### `POST /api/goals/recalculate`
+
+`ORGANIZATION_ADMIN` or `ANALYST`. Re-reads every metric-linked goal from its metric
+and returns `{ evaluated, changed, achieved }`. An import commit does this
+automatically; this is for when someone wants it now.
+
+### `GET /api/decisions`, `GET /api/decisions/:id`
+
+Any member role. Paginated, filterable by `status`, `priority` and `ownerId`. The
+detail response carries the decision's evidence (metrics, alerts, insights, goals),
+its actions and every review it has had.
+
+### `GET /api/decisions/centre`
+
+Any member role. The decision centre (plan §30): critical issues, warnings,
+opportunities, open decisions, recently reviewed decisions and goals at risk. A read
+over what the engines already produced — nothing is calculated here.
+
+### `POST /api/decisions`, `PATCH /api/decisions/:id`
+
+`ORGANIZATION_ADMIN` or `ANALYST`. Creating a decision requires at least one piece of
+evidence, and an edit cannot remove the last one. Evidence belonging to another
+organization is rejected with `VALIDATION_ERROR`.
+
+### `POST /api/decisions/:id/actions`, `PATCH /api/decisions/:id/actions/:actionId`, `DELETE /api/decisions/:id/actions/:actionId`
+
+`ORGANIZATION_ADMIN` or `ANALYST`. What someone will actually do, and whether it is
+done.
+
+### `POST /api/decisions/:id/review`
+
+`ORGANIZATION_ADMIN` or `ANALYST`. Body `{ actualOutcome, result, notes? }`. The
+decision's expected outcome is copied onto the review as it stood, so a later edit
+cannot rewrite what the review was judged against. Reviewing a `DRAFT` decision is
+refused with `CONFLICT`.
+
 ### `GET /api/industry-packs`
 
 Any member role. What applies to this organization: the industry, the packs

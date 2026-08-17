@@ -227,6 +227,23 @@ export const hospitalityPack: PackDefinition = {
         evidence: ['revpar', 'occupancy_rate', 'adr'],
       },
     },
+    {
+      code: 'demand_supports_a_higher_rate',
+      name: 'Demand supports a higher rate',
+      description:
+        'An opportunity rather than a problem: the decision centre reads INFO insights as its opportunities.',
+      severity: 'INFO',
+      category: 'Financial',
+      definition: {
+        conditions: [
+          { metric: 'occupancy_rate', measure: 'VALUE', operator: 'GT', value: 85 },
+          { metric: 'adr', measure: 'CHANGE_PCT', operator: 'LT', value: 2 },
+        ],
+        narrative:
+          'The property is running above 85% occupancy without the rate moving with it. Demand at this level usually carries a higher rate before it costs occupancy.',
+        evidence: ['occupancy_rate', 'adr', 'revpar'],
+      },
+    },
   ],
   alertRules: [
     {

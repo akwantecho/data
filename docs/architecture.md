@@ -164,7 +164,10 @@ Delivered:
   and deterministic insight detection (ADR-0011). All three read through the
   analytics layer, all three explain themselves, and an import commit runs the three
   in order.
+- **Sprint 8** — goals that read their own progress from their metric and derive
+  their status from the calendar, and the decision centre: decisions that cannot be
+  recorded without evidence, actions, and reviews judged against the expectation as
+  it stood (ADR-0012). The analysis run now refreshes goals after the three engines.
 
 Not built yet:
-industry pack content (5), dashboard and analytics (6), health/alerts/insights (7),
-goals and decisions (8), AI analyst (9), reports and hardening (10).
+AI analyst (9), reports and hardening (10).

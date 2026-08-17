@@ -223,6 +223,24 @@ export const realEstatePack: PackDefinition = {
         evidence: ['maintenance_cost', 'revenue', 'revenue_per_unit'],
       },
     },
+    {
+      code: 'full_portfolio_supports_a_rent_review',
+      name: 'A full portfolio supports a rent review',
+      description:
+        'An opportunity rather than a problem: the decision centre reads INFO insights as its opportunities.',
+      severity: 'INFO',
+      category: 'Asset Performance',
+      definition: {
+        conditions: [
+          { metric: 'occupancy_rate', measure: 'VALUE', operator: 'GT', value: 95 },
+          { metric: 'renewal_rate', measure: 'VALUE', operator: 'GT', value: 80 },
+          { metric: 'revenue_per_unit', measure: 'CHANGE_PCT', operator: 'LT', value: 2 },
+        ],
+        narrative:
+          'Units are close to full and tenants are renewing, but revenue per unit is flat. A rent review is worth modelling before the next renewal cycle.',
+        evidence: ['occupancy_rate', 'renewal_rate', 'revenue_per_unit'],
+      },
+    },
   ],
   alertRules: [
     {

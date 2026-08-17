@@ -414,7 +414,7 @@ export class ImportsService {
           `Import ${importId} committed, but the analysis failed: ${String(error)}`,
         );
 
-        return [];
+        return { periods: [], goals: { evaluated: 0, changed: 0, achieved: 0 } };
       });
 
     const committed = await this.prisma.dataImport.findUniqueOrThrow({
@@ -433,8 +433,9 @@ export class ImportsService {
         valuesWritten: written,
         rowsRejected: committed.rowsRejected,
         valuesCalculated: recalculation.calculated,
-        alertsRaised: analysed.reduce((total, run) => total + run.alerts.created, 0),
-        insightsCreated: analysed.reduce((total, run) => total + run.insights.created, 0),
+        alertsRaised: analysed.periods.reduce((total, run) => total + run.alerts.created, 0),
+        insightsCreated: analysed.periods.reduce((total, run) => total + run.insights.created, 0),
+        goalsUpdated: analysed.goals.changed,
       },
       ipAddress,
     });

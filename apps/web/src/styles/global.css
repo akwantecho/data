@@ -832,3 +832,57 @@ a.button:hover {
 .drawer > .stack {
   margin-block-start: var(--space-4);
 }
+
+/* --- Goals and decisions --------------------------------------------------- */
+
+.goal-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.goal-progress__track {
+  background: var(--color-surface-muted);
+  block-size: 10px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  position: relative;
+}
+
+.goal-progress__fill {
+  block-size: 100%;
+  border-radius: var(--radius-sm);
+  transition: inline-size 120ms ease-out;
+}
+
+.goal-progress__fill--positive {
+  background: var(--color-positive);
+}
+
+.goal-progress__fill--warning {
+  background: var(--color-warning);
+}
+
+.goal-progress__fill--negative {
+  background: var(--color-negative);
+}
+
+.goal-progress__fill--neutral {
+  background: var(--color-accent);
+}
+
+/* Where the calendar says the goal should be by now. */
+.goal-progress__pace {
+  background: var(--color-text);
+  block-size: 100%;
+  inline-size: 2px;
+  inset-block-start: 0;
+  position: absolute;
+}
+
+/* A checkbox sitting beside its label rather than beneath it. */
+.checkbox-row {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+}

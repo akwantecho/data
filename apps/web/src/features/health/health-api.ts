@@ -1,7 +1,7 @@
 import type {
   AlertDetail,
   AlertSummary,
-  AnalysisRunResult,
+  AnalysisRun,
   HealthCurrent,
   HealthHistoryPoint,
   InsightSummary,
@@ -61,6 +61,6 @@ export function fetchInsights(
 }
 
 /** Runs health, alerts and insights for the latest period, in that order. */
-export function runAnalysis(): Promise<AnalysisRunResult[]> {
-  return apiRequest<AnalysisRunResult[]>('/analysis/run', { method: 'POST' });
+export function runAnalysis(): Promise<AnalysisRun> {
+  return apiRequest<AnalysisRun>('/analysis/run', { method: 'POST' });
 }

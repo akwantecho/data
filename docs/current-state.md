@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: end of Sprint 7.
+Last updated: end of Sprint 8.
 
 ## Repository state before Sprint 0
 
@@ -21,7 +21,7 @@ inherited, adapted or removed; everything described below was created in Sprint 
 | Security baseline        | Helmet, CORS allow-list, rate limiting, 1 MB body cap, Nginx CSP                           |
 | Tooling                  | ESLint 9 flat config, Prettier, Jest, Vitest, GitHub Actions CI                            |
 | Containers               | `docker-compose.yml` with db/api/web; multi-stage Dockerfiles                              |
-| Documentation            | Architecture, database, API, industry packs, analytics, 11 ADRs, this file                 |
+| Documentation            | Architecture, database, API, industry packs, analytics, 12 ADRs, this file                 |
 | Authentication           | Argon2id passwords, httpOnly cookie sessions, rotating refresh tokens with reuse detection |
 | Authorization            | Global auth guard, `@Roles` membership checks, `@PlatformAdminOnly` separation             |
 | Tenancy                  | Organization scope from the session only; membership re-read per request                   |
@@ -33,14 +33,16 @@ inherited, adapted or removed; everything described below was created in Sprint 
 | Industry packs           | Three MVP packs as validated data, catalogue sync, transactional non-destructive installer |
 | Dashboard & analytics    | Read-time aggregation, one-request dashboard, global filters, period and slice comparison  |
 | Health, alerts, insights | Weighted health scoring with a full breakdown, alert workflow, deterministic insights      |
+| Goals                    | Progress read from the linked metric, status derived from the calendar, auditable history  |
+| Decisions                | Evidence-backed decisions, actions, reviews judged against the original expectation        |
 
 ## Verified locally
 
 - `pnpm -r lint` — clean
 - `pnpm -r typecheck` — clean
 - `pnpm -r build` — API, web and shared types all build
-- `pnpm -r test` — 308 API unit tests, 110 web tests
-- `pnpm --filter @sip/api test:e2e` — 185 integration tests against real PostgreSQL
+- `pnpm -r test` — 329 API unit tests, 131 web tests
+- `pnpm --filter @sip/api test:e2e` — 207 integration tests against real PostgreSQL
 - `prisma migrate deploy` + `prisma migrate diff --exit-code` — migrations reproduce the schema
 - API booted from `dist`: login → `/auth/me` → `/organizations/current` → refresh → logout,
   with platform routes refused to tenants and tenant routes refused to platform staff
@@ -75,6 +77,12 @@ inherited, adapted or removed; everything described below was created in Sprint 
   kept and nothing added, and hand-entered revenue, available rooms and occupied
   rooms producing calculated occupancy 77%, ADR 57.534 and RevPAR 44.301 — checked
   in PostgreSQL, and consistent with each other (44.301 = 57.534 × 0.77)
+- Full browser run of goals and the decision centre against seeded data: the goals list
+  showing a revenue goal at 43.56% against 46.43% expected (on track) beside a retention
+  goal at 0% (off track) — both read from their metrics, neither typed; the decision
+  centre carrying critical issues, warnings, goals at risk, open decisions and an empty
+  recently-reviewed section; and a decision detail page listing all four kinds of
+  evidence with each item linked back to its own record, its action, and the review form
 - Full browser run of the import wizard against a deliberately messy 10-row CSV:
   suggested mapping, validation reporting 6 valid and 4 rejected with per-row reasons,
   commit writing 6 metric values, the rejected rows listed on the import detail page,
@@ -89,8 +97,7 @@ is proven until someone runs it on a machine with Docker.
 
 ## Not built yet (by design)
 
-Goals and decisions (Sprint 8), AI analyst (9), reports and production hardening
-(10).
+AI analyst (Sprint 9), reports and production hardening (10).
 
 ## Deviations from the plan document
 
@@ -154,4 +161,17 @@ Goals and decisions (Sprint 8), AI analyst (9), reports and production hardening
     `/health/current` and `/health/history` are tenant-scoped. A test asserts both.
 19. **Seed data landed in Sprint 1 rather than Sprint 10.** Plan §48 asks for seeds
     that make the interface demonstrable immediately, and login is not demonstrable
-    without users. Metric, goal and decision seeds still follow later.
+    without users. Metrics followed in Sprint 4, twelve months of history in Sprint 6,
+    and goals and decisions in Sprint 8 — the seed now also runs the real analysis
+    stack, so a fresh database demonstrates §49 without importing anything first.
+20. **`POST /analysis/run` returns `{ periods, goals }`, not an array.** Health,
+    alerts and insights are period-scoped; a goal spans its own window, so goal
+    progress is refreshed once per run and reported once (ADR-0012).
+21. **The decision centre's "Opportunities" are insights of `INFO` severity.** Plan
+    §30 names the section but not what fills it. Rather than add a second detector,
+    the packs mark favourable observations `INFO` and the section reads those, so an
+    opportunity is still whatever a deterministic rule said was going well.
+22. **A decision must carry at least one piece of evidence** (ADR-0012). The plan
+    lists evidence as something a decision "may" be linked to; requiring it is what
+    makes plan §32's review possible at all, since a review needs something to be
+    judged against.
