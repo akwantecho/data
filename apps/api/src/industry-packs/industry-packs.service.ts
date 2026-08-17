@@ -363,9 +363,7 @@ function splitRules(rows: Array<{ code: string; name: string; definition: unknow
   };
 }
 
-function healthCategories(
-  definition: unknown,
-): Array<{
+function healthCategories(definition: unknown): Array<{
   code: string;
   name: string;
   weight: number;

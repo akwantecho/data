@@ -5,5 +5,6 @@ import { DataQualityService } from './data-quality.service';
 @Module({
   controllers: [DataQualityController],
   providers: [DataQualityService],
+  exports: [DataQualityService],
 })
 export class DataQualityModule {}

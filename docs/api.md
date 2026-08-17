@@ -291,6 +291,35 @@ Recalculates every formula metric for the organization and returns
 `MISSING_INPUT` with the missing code, or `DIVISION_BY_ZERO`. Committing an import
 runs the same recalculation automatically, scoped to the periods the file touched.
 
+### `GET /api/dashboard/overview`
+
+Any member role. The whole executive dashboard in one request (plan §21): the
+resolved window, KPI cards, the headline trend, performance counts against
+thresholds and targets, the installed health model, open alerts/insights/goals/
+decisions, and the data-quality summary.
+
+Query: `from`, `to` (ISO dates over period starts), `branchId`, `departmentId`.
+Both dates are optional — the default is the six months up to the most recent
+period the organization reported. See [`analytics.md`](analytics.md) and ADR-0010.
+
+### `GET /api/analytics/options`
+
+Any member role. Metrics, branches, departments and the earliest/latest period with
+any stored value, so the filter bar never invents an id.
+
+### `GET /api/analytics/metric/:metricId`
+
+Any member role. One metric over the window: the aggregate, the aggregate over the
+preceding window, the change, the target and variance, the threshold status, both
+series, plus the metrics it is calculated from, the metrics calculated from it, and
+its category peers.
+
+### `GET /api/analytics/comparison`
+
+Any member role. `breakdown=BRANCH|DEPARTMENT` compares one metric (`metricId`)
+across slices; `breakdown=METRIC` compares several metrics (`metricIds`, comma
+separated, max 6) over the same window, in the order asked for.
+
 ### `GET /api/industry-packs`
 
 Any member role. What applies to this organization: the industry, the packs
@@ -358,7 +387,7 @@ Built sprint by sprint, per the execution plan:
 | 3      | `/data-sources`, `/imports/upload`, `/imports/:id/map`, `/imports/:id/validate`, `/imports/:id/commit`, `/data-quality` |
 | 4      | `/metrics`, `/metrics/:id/values`, `/metrics/:id/trend`, `/metric-targets`                                              |
 | 5      | `/industry-packs`, `/industry-packs/:id/install`, `/platform/industry-packs`, `/platform/industry-packs/sync`           |
-| 6      | `/dashboard/overview`, `/analytics/metric/:metricId`, `/analytics/comparison`                                           |
+| 6      | `/dashboard/overview`, `/analytics/options`, `/analytics/metric/:metricId`, `/analytics/comparison`                     |
 | 7      | `/health/current`, `/health/history`, `/alerts`, `PATCH /alerts/:id/status`, `/insights`                                |
 | 8      | `/goals`, `/decisions`, `POST /decisions/:id/review`                                                                    |
 | 9      | `POST /ai/query`, `/ai/conversations`                                                                                   |

@@ -174,8 +174,15 @@ industries, three organizations (healthcare, hospitality, real estate) with two
 branches each, and admin/analyst/viewer users per organization. It then syncs the
 industry pack catalogue and installs each organization's pack through the same
 function the API uses, so the seeded tenants hold exactly what a real installation
-produces. Every account uses `SEED_PASSWORD` (default `Password123!`) — development
-only.
+produces.
+
+`prisma/sample-history.ts` then reports **twelve months of figures per branch**
+(plan §48) and runs the real calculation service over them, so every formula metric
+is derived exactly as it would be in production and the dashboard has a trend to
+draw. The figures are deterministic — shaped by the metric code and the month index
+rather than by a random number — so two demonstrations show the same numbers and a
+screenshot can be reproduced. Every account uses `SEED_PASSWORD` (default
+`Password123!`) — development only.
 
 ```text
 platform@sip.local              PLATFORM_ADMIN

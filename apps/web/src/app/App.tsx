@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from '../components/AppShell';
 import { LoginPage } from '../features/auth/LoginPage';
 import { ProtectedRoute } from '../features/auth/ProtectedRoute';
+import { AnalyticsPage } from '../features/analytics/AnalyticsPage';
+import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { PlatformOrganizationsPage } from '../features/platform/PlatformOrganizationsPage';
 import { PlatformPacksPage } from '../features/industry-packs/PlatformPacksPage';
 import { DataQualityPage } from '../features/data/DataQualityPage';
@@ -28,7 +30,9 @@ export function App() {
           <ProtectedRoute>
             <AppShell>
               <Routes>
-                <Route path="/" element={<Navigate to="/system" replace />} />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/system" element={<SystemStatusPage />} />
                 <Route path="/platform/organizations" element={<PlatformOrganizationsPage />} />
                 <Route path="/platform/industry-packs" element={<PlatformPacksPage />} />
@@ -48,7 +52,7 @@ export function App() {
                 <Route path="/settings/branches" element={<BranchesPage />} />
                 <Route path="/settings/departments" element={<DepartmentsPage />} />
                 <Route path="/settings/team" element={<TeamPage />} />
-                <Route path="*" element={<Navigate to="/system" replace />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </AppShell>
           </ProtectedRoute>

@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 import { hash } from '@node-rs/argon2';
 import { installPack, packForIndustry } from '../src/industry-packs/pack-install';
 import { syncPackCatalogue } from '../src/industry-packs/pack-sync';
+import { CalculationService } from '../src/metrics/calculation.service';
+import { seedSampleHistory } from './sample-history';
 
 /**
  * Development seed.
@@ -11,7 +13,8 @@ import { syncPackCatalogue } from '../src/industry-packs/pack-sync';
  * members, branches, a CSV data source and a small set of universal metrics — so
  * sign-in, tenant isolation and the import wizard are all demonstrable straight
  * away. It then syncs the industry pack catalogue and installs each organization's
- * pack, exactly as choosing an industry through the API would.
+ * pack, exactly as choosing an industry through the API would, and reports twelve
+ * months of sample figures (plan §48) so the dashboard has a trend to draw.
  *
  * Idempotent: safe to run repeatedly.
  */
@@ -131,7 +134,7 @@ async function main(): Promise<void> {
   // every organization below is then installed from the database, not from code.
   const synced = await syncPackCatalogue(prisma);
 
-  for (const definition of ORGANIZATIONS) {
+  for (const [organizationIndex, definition] of ORGANIZATIONS.entries()) {
     const industry = await prisma.industry.findUniqueOrThrow({
       where: { code: definition.industry },
     });
@@ -186,6 +189,16 @@ async function main(): Promise<void> {
           `${result.insightRulesCreated} insight rules, ${result.alertRulesCreated} alert rules)`,
       );
     }
+
+    // Twelve months of history per branch, then the real calculation service to
+    // derive every formula metric from it — the same code the API runs.
+    const history = await seedSampleHistory(prisma, organization.id, organizationIndex);
+    const calculated = await new CalculationService(prisma as never).recalculate(organization.id);
+
+    console.log(
+      `  ${definition.name}: ${history.values} sample values, ${history.targets} targets, ` +
+        `${history.thresholds} thresholds, ${calculated.calculated} calculated`,
+    );
 
     const existingSource = await prisma.dataSource.findFirst({
       where: { organizationId: organization.id, name: 'Monthly CSV upload' },

@@ -31,7 +31,7 @@ export function LoginPage() {
     onSuccess: (session) => {
       queryClient.setQueryData(SESSION_QUERY_KEY, session);
       const from = (location.state as { from?: string } | null)?.from;
-      navigate(from ?? '/system', { replace: true });
+      navigate(from ?? '/dashboard', { replace: true });
     },
   });
 
@@ -40,7 +40,7 @@ export function LoginPage() {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/system" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const onSubmit = handleSubmit((values) => {

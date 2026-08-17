@@ -14,9 +14,10 @@ Trusted Data → Structured Metrics → Business Context → Performance Evaluat
 MVP industries: **Healthcare**, **Hospitality / Tourism**, **Real Estate**.
 Architecture: **Universal Core + Industry Packs + Organization Customization**.
 
-> **Status: Sprint 5 complete** — foundation, authentication, multi-tenancy,
-> organization structure, the CSV import engine, the metrics engine and the three
-> industry packs. The executive dashboard lands in Sprint 6.
+> **Status: Sprint 6 complete** — foundation, authentication, multi-tenancy,
+> organization structure, the CSV import engine, the metrics engine, the three
+> industry packs, and the executive dashboard with analytics. Health, alerts and
+> insights land in Sprint 7.
 > See [`docs/current-state.md`](docs/current-state.md).
 
 ## Stack
@@ -140,5 +141,6 @@ These are enforced in review, not aspirational:
 - [`docs/industry-packs.md`](docs/industry-packs.md) — how an industry is added as data
 - [`docs/testing.md`](docs/testing.md) — test layers and what belongs in each
 - [`docs/deployment.md`](docs/deployment.md) — running the stack and going to production
+- [`docs/analytics.md`](docs/analytics.md) — how stored values become dashboard figures
 - [`docs/decisions/`](docs/decisions/) — architecture decision records
 - [`docs/sprints/`](docs/sprints/) — sprint completion reports

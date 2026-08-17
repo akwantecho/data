@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthorizationGuard } from './auth/guards/authorization.guard';
@@ -53,6 +54,7 @@ import { validateEnv, type Env } from './config/env';
     ImportsModule,
     DataQualityModule,
     MetricsModule,
+    AnalyticsModule,
     PlatformModule,
   ],
   providers: [

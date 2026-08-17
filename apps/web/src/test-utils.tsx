@@ -55,8 +55,10 @@ interface StubRoute {
 }
 
 /**
- * Stubs `fetch` by path suffix. Anything unmatched resolves as 401, which is what
- * the API returns for an unauthenticated caller.
+ * Stubs `fetch` by suffix: the whole URL first, so a stub can target one specific
+ * query, then the path alone, so a route stubbed once answers whatever filters it
+ * is called with. Anything unmatched resolves as 401, which is what the API
+ * returns for an unauthenticated caller.
  */
 export function stubFetch(routes: Record<string, StubRoute>) {
   const calls: Array<{ url: string; init?: RequestInit }> = [];
@@ -64,7 +66,10 @@ export function stubFetch(routes: Record<string, StubRoute>) {
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     calls.push({ url, init });
 
-    const key = Object.keys(routes).find((route) => url.endsWith(route));
+    const path = url.split('?')[0];
+    const key =
+      Object.keys(routes).find((route) => url.endsWith(route)) ??
+      Object.keys(routes).find((route) => path.endsWith(route));
     const route = key ? routes[key] : undefined;
     const status = route?.status ?? (route ? 200 : 401);
 

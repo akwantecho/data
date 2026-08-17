@@ -30,6 +30,9 @@ export function TrendChart({ points, unit, currencyCode, target, height = 260 }:
     const grid = token('--color-border', '#dfe3e8');
 
     return {
+      // Animation off: an executive chart is read, not watched, and a static
+      // render is also what makes a screenshot in a test deterministic.
+      animation: false,
       grid: { left: 8, right: 16, top: 24, bottom: 8, containLabel: true },
       tooltip: {
         trigger: 'axis',
@@ -65,7 +68,12 @@ export function TrendChart({ points, unit, currencyCode, target, height = 260 }:
                 markLine: {
                   silent: true,
                   symbol: 'none',
-                  label: { formatter: 'Target', color: text, fontSize: 11 },
+                  label: {
+                    formatter: 'Target',
+                    position: 'insideStartTop',
+                    color: text,
+                    fontSize: 11,
+                  },
                   lineStyle: { color: text, type: 'dashed' },
                   data: [{ yAxis: Number(target) }],
                 },

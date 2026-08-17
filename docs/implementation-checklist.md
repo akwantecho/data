@@ -81,13 +81,16 @@ Legend: `[x]` done · `[ ]` not started
 - [x] Tests: correct pack installed on industry selection; re-install keeps customizations;
       no cross-industry leakage
 
-## Sprint 6 — Executive dashboard and analytics
+## Sprint 6 — Executive dashboard and analytics ✅
 
-- [ ] `GET /dashboard/overview` aggregate endpoint
-- [ ] KPI cards, trend chart, period comparison
-- [ ] Date range / branch / department filters
-- [ ] Analytics page and metric detail page
-- [ ] Tests: dashboard numbers match backend calculations; filters apply consistently
+- [x] Read-time aggregation engine: slices, periods, formulas recomputed from inputs
+- [x] `GET /dashboard/overview` aggregate endpoint, one request per screen
+- [x] KPI cards, headline trend with the previous range, performance counts
+- [x] Date range / branch / department filters applied to every panel at once
+- [x] Analytics page: metric picker, period comparison, branch and department
+      breakdowns, related metrics
+- [x] Twelve months of deterministic sample history in the seed (plan §48)
+- [x] Tests: dashboard numbers match backend calculations; filters apply consistently
 
 ## Sprint 7 — Health, alerts and insights
 

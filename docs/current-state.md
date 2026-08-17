@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: end of Sprint 5.
+Last updated: end of Sprint 6.
 
 ## Repository state before Sprint 0
 
@@ -21,7 +21,7 @@ inherited, adapted or removed; everything described below was created in Sprint 
 | Security baseline      | Helmet, CORS allow-list, rate limiting, 1 MB body cap, Nginx CSP                           |
 | Tooling                | ESLint 9 flat config, Prettier, Jest, Vitest, GitHub Actions CI                            |
 | Containers             | `docker-compose.yml` with db/api/web; multi-stage Dockerfiles                              |
-| Documentation          | Architecture, database, API, industry packs, 9 ADRs, this file                             |
+| Documentation          | Architecture, database, API, industry packs, analytics, 10 ADRs, this file                 |
 | Authentication         | Argon2id passwords, httpOnly cookie sessions, rotating refresh tokens with reuse detection |
 | Authorization          | Global auth guard, `@Roles` membership checks, `@PlatformAdminOnly` separation             |
 | Tenancy                | Organization scope from the session only; membership re-read per request                   |
@@ -31,14 +31,15 @@ inherited, adapted or removed; everything described below was created in Sprint 
 | Data import            | CSV upload → map → validate → commit, auditable rows, duplicate protection, quality score  |
 | Metrics engine         | Metrics CRUD, parsed formulas with a dependency graph, server-side calculation, targets    |
 | Industry packs         | Three MVP packs as validated data, catalogue sync, transactional non-destructive installer |
+| Dashboard & analytics  | Read-time aggregation, one-request dashboard, global filters, period and slice comparison  |
 
 ## Verified locally
 
 - `pnpm -r lint` — clean
 - `pnpm -r typecheck` — clean
 - `pnpm -r build` — API, web and shared types all build
-- `pnpm -r test` — 204 API unit tests, 76 web tests
-- `pnpm --filter @sip/api test:e2e` — 142 integration tests against real PostgreSQL
+- `pnpm -r test` — 233 API unit tests, 92 web tests
+- `pnpm --filter @sip/api test:e2e` — 163 integration tests against real PostgreSQL
 - `prisma migrate deploy` + `prisma migrate diff --exit-code` — migrations reproduce the schema
 - API booted from `dist`: login → `/auth/me` → `/organizations/current` → refresh → logout,
   with platform routes refused to tenants and tenant routes refused to platform staff
@@ -52,6 +53,12 @@ inherited, adapted or removed; everything described below was created in Sprint 
   a bad formula refused with the server's reason, two hand-entered values producing a
   calculated `net_profit` (29,650) and `net_margin` (23.0919%), and a target and
   thresholds driving the status badge — values confirmed directly in PostgreSQL
+- Full browser run of the dashboard and analytics: KPI cards with period-over-period
+  change, a branch filter moving every panel at once (OMR 2.7M → 1.2M), a range
+  preset moving the window and the comparison window with it, and RevPAR on the
+  analytics page recomputed for the range from revenue ÷ available rooms —
+  97.628442198403, matching the API's own figure to the digit, and sitting between
+  the two branches' 95.776 and 100.155
 - Full browser run of the industry packs: the platform catalogue listing three packs
   and syncing them, a pack inspected in full, the tenant settings card showing the
   installed hospitality pack and its health model, a re-install reporting 12 metrics
@@ -72,10 +79,10 @@ is proven until someone runs it on a machine with Docker.
 
 ## Not built yet (by design)
 
-Dashboard and analytics (Sprint 6), health scoring, alert generation and insight
-evaluation (7), goals and decisions (8), AI analyst (9), reports and production
-hardening (10). The health model and the rules are installed and inspectable; the
-engines that read them are Sprint 7.
+Health scoring, alert generation and insight evaluation (Sprint 7), goals and
+decisions (8), AI analyst (9), reports and production hardening (10). The health
+model and the rules are installed, inspectable and shown on the dashboard without a
+score; the engines that read them are Sprint 7.
 
 ## Deviations from the plan document
 
@@ -110,9 +117,9 @@ engines that read them are Sprint 7.
     Plan §14 ends the flow at "recalculate affected metrics", and §15 validates metric
     codes, so the long-format CSV maps onto `metric_values`. The `datasets` and
     `dataset_columns` tables stay unused until a source type needs arbitrary schemas.
-11. **Formulas cannot aggregate across periods or slices yet** (no "sum of last 12
-    months", no organization total derived from branches). Those are read-time
-    analytics and belong with the dashboard in Sprint 6.
+11. **Stored formulas evaluate one period and one slice at a time**; aggregation
+    across periods and slices is read-time instead (Sprint 6, ADR-0010), where a
+    formula is recomputed from its aggregated inputs rather than averaged.
 12. **Industry packs install both insight and alert rules from one pack table.**
     Plan §8.5 gives a pack a single rule table; alert rules are rules a pack installs
     too, so each row records its kind and alert codes carry an `alert:` prefix
@@ -124,6 +131,13 @@ engines that read them are Sprint 7.
 14. **A metric code cannot be changed after creation.** Formulas, CSV mappings and
     packs all refer to metrics by code, so renaming one would orphan all three. The
     name remains editable.
-15. **Seed data landed in Sprint 1 rather than Sprint 10.** Plan §48 asks for seeds
+15. **Dashboard KPI cards come from the health model** rather than the four metric
+    names plan §21 lists. The model states what an organization weighs, per industry
+    and per tenant, so the cards follow it instead of hardcoding industry vocabulary
+    the architecture forbids (ADR-0010).
+16. **Aggregation is read-time only.** No rollup tables: a window figure is computed
+    on request from stored values, so a corrected month cannot leave a stale total
+    behind.
+17. **Seed data landed in Sprint 1 rather than Sprint 10.** Plan §48 asks for seeds
     that make the interface demonstrable immediately, and login is not demonstrable
     without users. Metric, goal and decision seeds still follow later.

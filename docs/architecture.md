@@ -156,6 +156,10 @@ Delivered:
 - **Sprint 5** — industry packs (ADR-0009): the three MVP packs as validated data,
   the catalogue sync, the transactional installer, automatic installation when an
   industry is chosen, and the platform and tenant pack screens.
+- **Sprint 6** — read-time aggregation (ADR-0010), the executive dashboard and the
+  analytics page: one request per screen, global date/branch/department filters,
+  period comparison, branch and department breakdowns, and twelve months of sample
+  history in the seed.
 
 Not built yet:
 industry pack content (5), dashboard and analytics (6), health/alerts/insights (7),
