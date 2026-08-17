@@ -24,11 +24,18 @@ Three layers, in strict order of authority:
 | Layer                      | Contains                                                                          | Lives in                                  |
 | -------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------- |
 | Universal Core             | Organization, Branch, Department, Dataset, Metric, Goal, Alert, Insight, Decision | Code + database schema                    |
-| Industry Pack              | Default metrics, health model, insight rules for one industry                     | Database rows (`industry_pack_*` tables)  |
+| Industry Pack              | Default metrics, health model, insight and alert rules for one industry           | Database rows (`industry_pack_*` tables)  |
 | Organization Customization | Tenant-owned metrics, targets, thresholds, health weights                         | Database rows scoped by `organization_id` |
 
 Industry vocabulary (patient, room, unit, property) **never** enters core code or
-core tables. A new industry is a data change, not a code change.
+core tables. A new industry is a data change, not a code change: the shipped packs
+are definitions synced into the pack tables, and the installer reads only from
+those tables, so a pack inserted by an administrator installs identically. No
+engine branches on an industry code.
+
+Installing clones template metrics into the tenant and never overwrites anything
+already present under the same code, which is what makes the third layer — the
+organization's own edits — survive every re-install.
 
 ## 3. Layout
 
@@ -146,6 +153,9 @@ Delivered:
 - **Sprint 4** — metrics CRUD, targets and thresholds, the formula engine
   (ADR-0008), recalculation after imports, manual data entry, and the metric
   catalogue and detail pages.
+- **Sprint 5** — industry packs (ADR-0009): the three MVP packs as validated data,
+  the catalogue sync, the transactional installer, automatic installation when an
+  industry is chosen, and the platform and tenant pack screens.
 
 Not built yet:
 industry pack content (5), dashboard and analytics (6), health/alerts/insights (7),

@@ -753,7 +753,11 @@ model AlertRule {
   id             String        @id @default(uuid()) @db.Uuid
   organizationId String        @db.Uuid
   metricId       String?       @db.Uuid
+  /// Stable identifier within the organization, so an industry pack can install
+  /// its rules idempotently and an upgrade can find what it installed before.
+  code           String
   name           String
+  description    String?
   type           AlertRuleType
   severity       AlertSeverity @default(WARNING)
   /// Rule parameters, e.g. { "changePct": -10 } or { "staleDays": 7 }.
@@ -766,6 +770,7 @@ model AlertRule {
   metric       Metric?      @relation(fields: [metricId], references: [id], onDelete: Cascade)
   alerts       Alert[]
 
+  @@unique([organizationId, code])
   @@index([organizationId, isActive])
   @@map("alert_rules")
 }

@@ -69,12 +69,17 @@ Legend: `[x]` done · `[ ]` not started
       threshold configuration, manual entry
 - [x] Tests: formulas, division by zero, missing dependencies, historical values
 
-## Sprint 5 — Industry packs
+## Sprint 5 — Industry packs ✅
 
-- [ ] Pack installer
-- [ ] Healthcare, Hospitality, Real Estate packs
-- [ ] Default health models and insight rules per pack
-- [ ] Tests: correct pack installed on organization creation; no cross-industry leakage
+- [x] Pack definitions as validated data, synced into the pack tables
+- [x] Pack installer: clone metrics and formulas, materialise health model and rules,
+      transactional, idempotent, never overwriting a customization
+- [x] Healthcare, Hospitality, Real Estate packs
+- [x] Default health models, insight rules and alert rules per pack
+- [x] Automatic installation when an organization's industry is chosen
+- [x] Frontend: platform pack browser with catalogue sync, tenant industry pack card
+- [x] Tests: correct pack installed on industry selection; re-install keeps customizations;
+      no cross-industry leakage
 
 ## Sprint 6 — Executive dashboard and analytics
 

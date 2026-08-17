@@ -38,8 +38,8 @@ const TENANT_NAV: NavItem[] = [
 const PLATFORM_NAV: NavItem[] = [
   { label: 'System Status', to: '/system' },
   { label: 'Organizations', to: '/platform/organizations', section: 'Platform' },
+  { label: 'Industry Packs', to: '/platform/industry-packs' },
   { label: 'Industries' },
-  { label: 'Industry Packs' },
   { label: 'Default Metrics' },
 ];
 
@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="app-shell__main">
         <header className="app-shell__topbar">
-          <span className="state">Sprint 4 — metrics engine</span>
+          <span className="state">Sprint 5 — industry packs</span>
           <UserMenu />
         </header>
         <main className="app-shell__content">{children}</main>

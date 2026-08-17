@@ -3,6 +3,7 @@ import type { OrganizationSummary } from '@sip/shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { ApiException } from '../common/errors/api-exception';
 import { AuditService } from '../audit/audit.service';
+import { PackInstallerService } from '../industry-packs/pack-installer.service';
 import type { UpdateOrganizationDto } from './organizations.dto';
 
 const ORGANIZATION_SELECT = {
@@ -29,6 +30,7 @@ export class OrganizationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly packs: PackInstallerService,
   ) {}
 
   async findCurrent(organizationId: string): Promise<OrganizationSummary> {
@@ -138,6 +140,12 @@ export class OrganizationsService {
       after: { industryId: updated.industryId },
       ipAddress,
     });
+
+    // Choosing an industry is what makes the pack applicable, so the templates
+    // arrive with the choice rather than waiting for someone to ask for them
+    // (plan §17). Nothing is overwritten, so an organization that already defined
+    // its own metrics keeps every one of them.
+    await this.packs.installForIndustry(organizationId, industryId, actorId, ipAddress);
 
     return toSummary(updated);
   }

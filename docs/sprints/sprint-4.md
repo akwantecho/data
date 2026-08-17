@@ -10,11 +10,12 @@ STATUS: COMPLETE — all acceptance criteria met, all blocking tests pass
 **Metric definitions** (plan §17)
 
 - CRUD over tenant-owned metrics: code, name, description, category, unit
-  (`CURRENCY`, `PERCENTAGE`, `NUMBER`, `RATIO`, `COUNT`, `SCORE`, `DAYS`, `HOURS`),
-  aggregation type, frequency, direction (`HIGHER_IS_BETTER` / `LOWER_IS_BETTER` /
-  `NEUTRAL`), active flag.
-- `code` is unique per organization and immutable after creation — imports, formulas
-  and future insight rules all key on it, so renaming it would silently orphan them.
+  (`CURRENCY`, `PERCENTAGE`, `COUNT`, `DECIMAL`, `RATIO`, `DAYS`, `HOURS`,
+  `MINUTES`, `SCORE`), aggregation type, frequency, direction (`HIGHER_IS_BETTER` /
+  `LOWER_IS_BETTER` / `TARGET_RANGE` / `INFORMATIONAL`), active flag.
+- `code` is unique per organization. Imports, formulas and future insight rules all
+  key on it, so renaming it would silently orphan them — the enforcement of that
+  landed in Sprint 5, where packs made it urgent.
 - A metric with stored values is deactivated rather than deleted; deleting it would
   cascade its history away. The service returns `CONFLICT` and says so.
 - System metrics (installed later by an industry pack) cannot be edited or deleted by

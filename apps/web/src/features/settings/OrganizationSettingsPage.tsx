@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import type { OrganizationSummary } from '@sip/shared-types';
 import { useSession } from '../auth/session-context';
+import { IndustryPackCard } from '../industry-packs/IndustryPackCard';
 import { ErrorState, LoadingState } from '../../components/states';
 import { FormField } from '../../components/FormField';
 import { describeApiError } from '../../lib/errors';
@@ -208,6 +209,8 @@ export function OrganizationSettingsPage() {
               </p>
             ) : null}
           </section>
+
+          <IndustryPackCard />
         </>
       ) : null}
     </SettingsLayout>

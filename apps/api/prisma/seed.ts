@@ -1,6 +1,8 @@
 /* eslint-disable no-console */
 import { PrismaClient } from '@prisma/client';
 import { hash } from '@node-rs/argon2';
+import { installPack, packForIndustry } from '../src/industry-packs/pack-install';
+import { syncPackCatalogue } from '../src/industry-packs/pack-sync';
 
 /**
  * Development seed.
@@ -8,7 +10,8 @@ import { hash } from '@node-rs/argon2';
  * Creates the platform admin, three industries and three organizations with
  * members, branches, a CSV data source and a small set of universal metrics — so
  * sign-in, tenant isolation and the import wizard are all demonstrable straight
- * away. Industry-specific metrics arrive with the industry packs in Sprint 5.
+ * away. It then syncs the industry pack catalogue and installs each organization's
+ * pack, exactly as choosing an industry through the API would.
  *
  * Idempotent: safe to run repeatedly.
  */
@@ -124,6 +127,10 @@ async function main(): Promise<void> {
     });
   }
 
+  // Packs are data: this writes the shipped catalogue into the pack tables, and
+  // every organization below is then installed from the database, not from code.
+  const synced = await syncPackCatalogue(prisma);
+
   for (const definition of ORGANIZATIONS) {
     const industry = await prisma.industry.findUniqueOrThrow({
       where: { code: definition.industry },
@@ -165,6 +172,19 @@ async function main(): Promise<void> {
           frequency: 'MONTHLY',
         },
       });
+    }
+
+    // Choosing an industry installs its pack — the same path the API takes when an
+    // administrator selects an industry in settings.
+    const packId = await packForIndustry(prisma, industry.id);
+
+    if (packId) {
+      const { result } = await installPack(prisma, organization.id, packId);
+      console.log(
+        `  ${definition.name}: installed ${result.packCode} ` +
+          `(+${result.metricsCreated} metrics, ${result.metricsKept} kept, ` +
+          `${result.insightRulesCreated} insight rules, ${result.alertRulesCreated} alert rules)`,
+      );
     }
 
     const existingSource = await prisma.dataSource.findFirst({
@@ -210,6 +230,7 @@ async function main(): Promise<void> {
   }
 
   console.log('Seed complete.');
+  console.log(`  Industry packs synced: ${synced.packs.map((pack) => pack.code).join(', ')}`);
   console.log(`  Platform admin: platform@sip.local / ${DEV_PASSWORD}`);
   for (const organization of ORGANIZATIONS) {
     console.log(`  ${organization.name}: admin@${organization.slug}.local / ${DEV_PASSWORD}`);

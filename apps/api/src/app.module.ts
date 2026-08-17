@@ -12,6 +12,7 @@ import { ImportsModule } from './imports/imports.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { IndustriesModule } from './industries/industries.module';
+import { IndustryPacksModule } from './industry-packs/industry-packs.module';
 import { OrganizationUsersModule } from './organization-users/organization-users.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
@@ -43,6 +44,7 @@ import { validateEnv, type Env } from './config/env';
     AuthModule,
     HealthModule,
     IndustriesModule,
+    IndustryPacksModule,
     OrganizationsModule,
     OrganizationUsersModule,
     BranchesModule,

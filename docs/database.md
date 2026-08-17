@@ -79,9 +79,17 @@ replaced wholesale on recalculation, never appended (ADR-0008).
 
 ### Industry packs — `industry_packs`, `industry_pack_metrics`, `industry_pack_health_models`, `industry_pack_insight_rules`, `organization_industry_packs`
 
-A pack is data. Installing it clones template metrics into the organization and
-materialises the health model and insight rules. `organization_industry_packs`
-records what was installed and at which version, so an upgrade path exists later.
+A pack is data. Template metrics are `metrics` rows with `industry_id` set and
+`organization_id` null; `industry_pack_metrics` lists the ones a pack installs, in
+display order. Installing clones those metrics into the organization
+(`is_system = true`), re-resolves their formulas and dependency rows to the
+tenant's own metric ids, and materialises the health model and both kinds of rule —
+never overwriting anything already present under the same code (ADR-0009).
+
+`industry_pack_insight_rules` holds both kinds: each row's JSON records
+`{ kind: 'INSIGHT' | 'ALERT', rule }`, and alert rows carry an `alert:` code prefix
+so the two cannot collide on one code. `organization_industry_packs` records what
+was installed and at which version, so an upgrade path exists later.
 
 ### Health — `health_models`, `health_categories`, `health_metric_weights`, `health_scores`
 
@@ -93,8 +101,11 @@ ranges live in `health_models.bands` (defaults in `@sip/shared-types`).
 
 ### Alerts — `alert_rules`, `alerts`, `alert_events`
 
-`alerts.evidence` holds the numbers that triggered the alert. `alert_events`
-records every status transition (who moved it from OPEN to ACKNOWLEDGED, and why).
+`alert_rules.code` is unique per organization, so an industry pack can install its
+rules idempotently and find them again later; `definition` carries the parameters
+for that rule type. `alerts.evidence` holds the numbers that triggered the alert.
+`alert_events` records every status transition (who moved it from OPEN to
+ACKNOWLEDGED, and why).
 
 ### Insights — `insight_rules`, `insights`, `insight_evidence`
 
@@ -137,10 +148,11 @@ Further indexes are added when a real query needs them, verified with `EXPLAIN`.
 
 ## Migrations so far
 
-| Migration                   | Contents                                           |
-| --------------------------- | -------------------------------------------------- |
-| `…_initial_platform_schema` | Every domain above (Sprint 0)                      |
-| `…_refresh_token_families`  | `family_id` + `revoked_reason` on `refresh_tokens` |
+| Migration                   | Contents                                                          |
+| --------------------------- | ----------------------------------------------------------------- |
+| `…_initial_platform_schema` | Every domain above (Sprint 0)                                     |
+| `…_refresh_token_families`  | `family_id` + `revoked_reason` on `refresh_tokens`                |
+| `…_alert_rule_codes`        | `code` (unique per organization) + `description` on `alert_rules` |
 
 ## Working with migrations
 
@@ -159,8 +171,11 @@ CI fails if the committed migrations do not reproduce the schema exactly
 
 `prisma/seed.ts` is idempotent and creates: one platform admin, the three MVP
 industries, three organizations (healthcare, hospitality, real estate) with two
-branches each, and admin/analyst/viewer users per organization. Every account uses
-`SEED_PASSWORD` (default `Password123!`) — development only.
+branches each, and admin/analyst/viewer users per organization. It then syncs the
+industry pack catalogue and installs each organization's pack through the same
+function the API uses, so the seeded tenants hold exactly what a real installation
+produces. Every account uses `SEED_PASSWORD` (default `Password123!`) — development
+only.
 
 ```text
 platform@sip.local              PLATFORM_ADMIN

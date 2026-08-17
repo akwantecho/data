@@ -3,6 +3,7 @@ import { AppShell } from '../components/AppShell';
 import { LoginPage } from '../features/auth/LoginPage';
 import { ProtectedRoute } from '../features/auth/ProtectedRoute';
 import { PlatformOrganizationsPage } from '../features/platform/PlatformOrganizationsPage';
+import { PlatformPacksPage } from '../features/industry-packs/PlatformPacksPage';
 import { DataQualityPage } from '../features/data/DataQualityPage';
 import { MetricDetailPage } from '../features/metrics/MetricDetailPage';
 import { MetricsPage } from '../features/metrics/MetricsPage';
@@ -30,6 +31,7 @@ export function App() {
                 <Route path="/" element={<Navigate to="/system" replace />} />
                 <Route path="/system" element={<SystemStatusPage />} />
                 <Route path="/platform/organizations" element={<PlatformOrganizationsPage />} />
+                <Route path="/platform/industry-packs" element={<PlatformPacksPage />} />
                 <Route path="/metrics" element={<MetricsPage />} />
                 <Route path="/metrics/:id" element={<MetricDetailPage />} />
                 <Route path="/data" element={<Navigate to="/data/sources" replace />} />

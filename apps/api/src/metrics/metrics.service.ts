@@ -247,6 +247,20 @@ export class MetricsService {
       throw ApiException.notFound('Metric');
     }
 
+    // The code is the metric's identity everywhere else: formulas reference it,
+    // CSV mappings target it, and industry packs match on it. Renaming it would
+    // leave all three pointing at nothing, so the name is editable and the code
+    // is not.
+    if (dto.code !== undefined && dto.code !== before.code) {
+      throw ApiException.validation('The request could not be processed.', [
+        {
+          field: 'code',
+          message:
+            'A metric code cannot be changed after creation — formulas and imports refer to it.',
+        },
+      ]);
+    }
+
     const aggregationType = dto.aggregationType ?? before.aggregationType;
     const formula = dto.formula === undefined ? (before.formula?.expression ?? null) : dto.formula;
 

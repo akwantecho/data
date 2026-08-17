@@ -14,9 +14,9 @@ Trusted Data → Structured Metrics → Business Context → Performance Evaluat
 MVP industries: **Healthcare**, **Hospitality / Tourism**, **Real Estate**.
 Architecture: **Universal Core + Industry Packs + Organization Customization**.
 
-> **Status: Sprint 4 complete** — foundation, authentication, multi-tenancy,
-> organization structure, the CSV import engine and the metrics engine. Industry
-> packs land in Sprint 5.
+> **Status: Sprint 5 complete** — foundation, authentication, multi-tenancy,
+> organization structure, the CSV import engine, the metrics engine and the three
+> industry packs. The executive dashboard lands in Sprint 6.
 > See [`docs/current-state.md`](docs/current-state.md).
 
 ## Stack

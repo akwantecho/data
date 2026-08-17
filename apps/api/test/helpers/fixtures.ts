@@ -15,7 +15,7 @@ export interface SeededUser {
 
 export async function createOrganization(
   prisma: PrismaService,
-  options: { name?: string; status?: OrganizationStatus } = {},
+  options: { name?: string; status?: OrganizationStatus; industryId?: string } = {},
 ): Promise<SeededOrganization> {
   const slug = unique('org');
 
@@ -27,6 +27,7 @@ export async function createOrganization(
       currencyCode: 'OMR',
       timezone: 'Asia/Muscat',
       status: options.status ?? 'ACTIVE',
+      industryId: options.industryId ?? null,
     },
   });
 

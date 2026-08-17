@@ -1,5 +1,6 @@
 import { OrganizationsService } from './organizations.service';
 import type { AuditService } from '../audit/audit.service';
+import type { PackInstallerService } from '../industry-packs/pack-installer.service';
 
 const organizationRow = {
   id: 'org-1',
@@ -47,7 +48,13 @@ function buildHarness(
 
   const audit = { record: jest.fn().mockResolvedValue(undefined) } as unknown as AuditService;
 
-  return { service: new OrganizationsService(prisma as never, audit), prisma, audit };
+  // Choosing an industry installs its pack; these tests are about the choice, so
+  // the installer is stubbed and asserted separately in the integration suite.
+  const packs = {
+    installForIndustry: jest.fn().mockResolvedValue(null),
+  } as unknown as PackInstallerService;
+
+  return { service: new OrganizationsService(prisma as never, audit, packs), prisma, audit, packs };
 }
 
 describe('OrganizationsService.setIndustry', () => {

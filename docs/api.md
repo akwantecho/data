@@ -291,11 +291,53 @@ Recalculates every formula metric for the organization and returns
 `MISSING_INPUT` with the missing code, or `DIVISION_BY_ZERO`. Committing an import
 runs the same recalculation automatically, scoped to the periods the file touched.
 
+### `GET /api/industry-packs`
+
+Any member role. What applies to this organization: the industry, the packs
+published for it (with `installedVersion` when installed), the organization's own
+health model as installed, and the counts of pack metrics and rules it holds. A
+pack for another industry never appears here.
+
+### `GET /api/industry-packs/:id`
+
+Any member role. Full contents of a pack: metrics with formulas, health categories
+with weights, insight rules and alert rules with the metrics each reads. Resolved
+through the caller's industry — a pack from another industry is `NOT_FOUND`, not
+`FORBIDDEN`, because a tenant has no business knowing it exists.
+
+### `POST /api/industry-packs/:id/install`
+
+`ORGANIZATION_ADMIN` only. Installs the pack into the organization and returns what
+it did: `metricsCreated`, `metricsKept`, `healthModelCreated`,
+`healthCategoriesCreated`, and created/kept counts for both kinds of rule.
+
+Idempotent and non-destructive: anything already present under the same code is
+left exactly as the organization has it, so re-installing picks up what a newer
+pack version added without undoing a customization. The whole install is one
+transaction.
+
 ### `GET /api/data-quality`
 
 Rule-based quality for the organization (plan §16): overall score, completeness,
 validity, freshness, days since the last import, rejected-row count, confidence and
 a per-source breakdown. Any member role.
+
+### `GET /api/platform/industry-packs`
+
+`PLATFORM_ADMIN` only. Every published pack across every industry, with its version
+and what it installs.
+
+### `GET /api/platform/industry-packs/:id`
+
+`PLATFORM_ADMIN` only. The same detail payload as the tenant route, without the
+industry restriction.
+
+### `POST /api/platform/industry-packs/sync`
+
+`PLATFORM_ADMIN` only. Re-reads the shipped catalogue into the pack tables and
+returns per-pack counts. Installed organizations are untouched: syncing changes
+what a _future_ install produces, and an existing tenant picks it up by installing
+again.
 
 ### `GET /api/platform/organizations`
 
@@ -315,7 +357,7 @@ Built sprint by sprint, per the execution plan:
 | 2      | `/branches`, `/departments`, `/organization-users`, `/industries`                                                       |
 | 3      | `/data-sources`, `/imports/upload`, `/imports/:id/map`, `/imports/:id/validate`, `/imports/:id/commit`, `/data-quality` |
 | 4      | `/metrics`, `/metrics/:id/values`, `/metrics/:id/trend`, `/metric-targets`                                              |
-| 5      | `/platform/industry-packs` (install/inspect)                                                                            |
+| 5      | `/industry-packs`, `/industry-packs/:id/install`, `/platform/industry-packs`, `/platform/industry-packs/sync`           |
 | 6      | `/dashboard/overview`, `/analytics/metric/:metricId`, `/analytics/comparison`                                           |
 | 7      | `/health/current`, `/health/history`, `/alerts`, `PATCH /alerts/:id/status`, `/insights`                                |
 | 8      | `/goals`, `/decisions`, `POST /decisions/:id/review`                                                                    |

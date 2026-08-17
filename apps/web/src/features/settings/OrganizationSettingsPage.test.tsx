@@ -48,6 +48,18 @@ function stubSettings(overrides: Record<string, { status?: number; body?: unknow
     '/auth/me': { body: adminSession },
     '/organizations/current': { body: organization },
     '/industries': { body: industries },
+    // The page now carries the industry pack card, which loads its own overview.
+    '/industry-packs': {
+      body: {
+        industryId: null,
+        industryName: null,
+        available: [],
+        healthModel: null,
+        insightRuleCount: 0,
+        alertRuleCount: 0,
+        systemMetricCount: 0,
+      },
+    },
     ...overrides,
   });
 }
