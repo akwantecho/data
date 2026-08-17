@@ -3,6 +3,11 @@ import { AppShell } from '../components/AppShell';
 import { LoginPage } from '../features/auth/LoginPage';
 import { ProtectedRoute } from '../features/auth/ProtectedRoute';
 import { PlatformOrganizationsPage } from '../features/platform/PlatformOrganizationsPage';
+import { DataQualityPage } from '../features/data/DataQualityPage';
+import { DataSourcesPage } from '../features/data/DataSourcesPage';
+import { ImportDetailPage } from '../features/data/ImportDetailPage';
+import { ImportWizardPage } from '../features/data/ImportWizardPage';
+import { ImportsPage } from '../features/data/ImportsPage';
 import { BranchesPage } from '../features/settings/BranchesPage';
 import { DepartmentsPage } from '../features/settings/DepartmentsPage';
 import { OrganizationSettingsPage } from '../features/settings/OrganizationSettingsPage';
@@ -23,6 +28,12 @@ export function App() {
                 <Route path="/" element={<Navigate to="/system" replace />} />
                 <Route path="/system" element={<SystemStatusPage />} />
                 <Route path="/platform/organizations" element={<PlatformOrganizationsPage />} />
+                <Route path="/data" element={<Navigate to="/data/sources" replace />} />
+                <Route path="/data/sources" element={<DataSourcesPage />} />
+                <Route path="/data/imports" element={<ImportsPage />} />
+                <Route path="/data/imports/new" element={<ImportWizardPage />} />
+                <Route path="/data/imports/:id" element={<ImportDetailPage />} />
+                <Route path="/data/quality" element={<DataQualityPage />} />
                 <Route
                   path="/settings"
                   element={<Navigate to="/settings/organization" replace />}

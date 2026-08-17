@@ -3,11 +3,12 @@ import { PrismaClient } from '@prisma/client';
 import { hash } from '@node-rs/argon2';
 
 /**
- * Development seed (Sprint 1 scope: identity and tenancy).
+ * Development seed.
  *
  * Creates the platform admin, three industries and three organizations with
- * members, so the login flow and tenant isolation are demonstrable immediately.
- * Metrics, imports and industry pack content are seeded in later sprints.
+ * members, branches, a CSV data source and a small set of universal metrics — so
+ * sign-in, tenant isolation and the import wizard are all demonstrable straight
+ * away. Industry-specific metrics arrive with the industry packs in Sprint 5.
  *
  * Idempotent: safe to run repeatedly.
  */
@@ -62,6 +63,45 @@ const ORGANIZATIONS = [
   },
 ];
 
+/**
+ * Universal core metrics every organization can report, whatever its industry.
+ * Industry packs add their own on top (plan §17).
+ */
+const UNIVERSAL_METRICS = [
+  {
+    code: 'revenue',
+    name: 'Revenue',
+    unit: 'CURRENCY' as const,
+    aggregationType: 'SUM' as const,
+    direction: 'HIGHER_IS_BETTER' as const,
+    category: 'Financial',
+  },
+  {
+    code: 'expenses',
+    name: 'Expenses',
+    unit: 'CURRENCY' as const,
+    aggregationType: 'SUM' as const,
+    direction: 'LOWER_IS_BETTER' as const,
+    category: 'Financial',
+  },
+  {
+    code: 'customers',
+    name: 'Customers',
+    unit: 'COUNT' as const,
+    aggregationType: 'SUM' as const,
+    direction: 'HIGHER_IS_BETTER' as const,
+    category: 'Growth',
+  },
+  {
+    code: 'satisfaction_score',
+    name: 'Satisfaction Score',
+    unit: 'SCORE' as const,
+    aggregationType: 'AVERAGE' as const,
+    direction: 'HIGHER_IS_BETTER' as const,
+    category: 'Customer',
+  },
+];
+
 async function main(): Promise<void> {
   const passwordHash = await hash(DEV_PASSWORD, ARGON2_OPTIONS);
 
@@ -107,6 +147,33 @@ async function main(): Promise<void> {
         where: { organizationId_code: { organizationId: organization.id, code: branch.code } },
         update: { name: branch.name },
         create: { organizationId: organization.id, code: branch.code, name: branch.name },
+      });
+    }
+
+    for (const metric of UNIVERSAL_METRICS) {
+      await prisma.metric.upsert({
+        where: { organizationId_code: { organizationId: organization.id, code: metric.code } },
+        update: {},
+        create: {
+          organizationId: organization.id,
+          code: metric.code,
+          name: metric.name,
+          unit: metric.unit,
+          aggregationType: metric.aggregationType,
+          direction: metric.direction,
+          category: metric.category,
+          frequency: 'MONTHLY',
+        },
+      });
+    }
+
+    const existingSource = await prisma.dataSource.findFirst({
+      where: { organizationId: organization.id, name: 'Monthly CSV upload' },
+    });
+
+    if (!existingSource) {
+      await prisma.dataSource.create({
+        data: { organizationId: organization.id, name: 'Monthly CSV upload', type: 'CSV' },
       });
     }
 

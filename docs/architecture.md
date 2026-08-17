@@ -1,6 +1,6 @@
 # Architecture
 
-> Status: Sprint 2 complete (foundation, authentication, tenancy, organization structure).
+> Status: Sprint 3 complete (foundation, auth, tenancy, structure, data import).
 
 ## 1. What this system is
 
@@ -140,7 +140,10 @@ Delivered:
   tenancy and platform guards, audit logging, login and session UI, seed data.
 - **Sprint 2** — industries and industry selection, branches, departments, team
   management, organization settings UI.
+- **Sprint 3** — data sources, the CSV import pipeline (upload → map → validate →
+  commit), row-level validation with retained rejections, and rule-based data
+  quality.
 
-Not built yet: imports (3), metrics (4),
+Not built yet: metrics engine (4),
 industry pack content (5), dashboard and analytics (6), health/alerts/insights (7),
 goals and decisions (8), AI analyst (9), reports and hardening (10).

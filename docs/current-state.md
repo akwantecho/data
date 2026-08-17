@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: end of Sprint 2.
+Last updated: end of Sprint 3.
 
 ## Repository state before Sprint 0
 
@@ -34,8 +34,8 @@ inherited, adapted or removed; everything described below was created in Sprint 
 - `pnpm -r lint` — clean
 - `pnpm -r typecheck` — clean
 - `pnpm -r build` — API, web and shared types all build
-- `pnpm -r test` — 85 API unit tests, 45 web tests
-- `pnpm --filter @sip/api test:e2e` — 61 integration tests against real PostgreSQL
+- `pnpm -r test` — 142 API unit tests, 56 web tests
+- `pnpm --filter @sip/api test:e2e` — 92 integration tests against real PostgreSQL
 - `prisma migrate deploy` + `prisma migrate diff --exit-code` — migrations reproduce the schema
 - API booted from `dist`: login → `/auth/me` → `/organizations/current` → refresh → logout,
   with platform routes refused to tenants and tenant routes refused to platform staff
@@ -45,6 +45,10 @@ inherited, adapted or removed; everything described below was created in Sprint 
 - Full browser run of the settings screens: creating a branch, the duplicate-code
   conflict surfacing the server message, a department attached to that branch, a role
   change applying, the organization profile saving, and a viewer seeing no write controls
+- Full browser run of the import wizard against a deliberately messy 10-row CSV:
+  suggested mapping, validation reporting 6 valid and 4 rejected with per-row reasons,
+  commit writing 6 metric values, the rejected rows listed on the import detail page,
+  a re-upload of the same file blocked, and data quality updating to 68/100
 
 ## Not verified locally
 
@@ -55,7 +59,7 @@ is proven until someone runs it on a machine with Docker.
 
 ## Not built yet (by design)
 
-Imports (Sprint 3), metrics engine (4), industry pack content (5), dashboard and
+Metrics engine and manual entry (Sprint 4), industry pack content (5), dashboard and
 analytics (6), health/alerts/insights (7), goals and decisions (8), AI analyst (9),
 reports and production hardening (10).
 
@@ -83,6 +87,14 @@ reports and production hardening (10).
 8. **Branches and departments carrying reported data are deactivated, not deleted.**
    The plan's "never silently discard data" rule applied to structure: deleting
    would cascade away metric values, so the API returns `CONFLICT` instead.
-9. **Seed data landed in Sprint 1 rather than Sprint 10.** Plan §48 asks for seeds
-   that make the interface demonstrable immediately, and login is not demonstrable
-   without users. Metric, goal and decision seeds still follow later.
+9. **The seed now creates four universal metrics per organization** (revenue,
+   expenses, customers, satisfaction score) so the import wizard is demonstrable
+   before the metrics engine exists. Industry-specific metrics still arrive with the
+   packs in Sprint 5.
+10. **Imports target metric values directly rather than the `datasets` tables.**
+    Plan §14 ends the flow at "recalculate affected metrics", and §15 validates metric
+    codes, so the long-format CSV maps onto `metric_values`. The `datasets` and
+    `dataset_columns` tables stay unused until a source type needs arbitrary schemas.
+11. **Seed data landed in Sprint 1 rather than Sprint 10.** Plan §48 asks for seeds
+    that make the interface demonstrable immediately, and login is not demonstrable
+    without users. Metric, goal and decision seeds still follow later.

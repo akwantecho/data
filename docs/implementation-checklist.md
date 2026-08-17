@@ -47,20 +47,21 @@ Legend: `[x]` done · `[ ]` not started
 - [x] Frontend: settings, branches, departments, team
 - [x] Tests: CRUD, tenant isolation, invalid organization references rejected
 
-## Sprint 3 — Data import engine
+## Sprint 3 — Data import engine ✅
 
-- [ ] Data sources (MANUAL, CSV)
-- [ ] CSV upload with type and size limits
-- [ ] Parser, preview, column detection, mapping
-- [ ] Validation rules (plan §15) with per-row errors retained
-- [ ] Commit, import history, duplicate-commit prevention, cancel before commit
-- [ ] Data quality module (completeness, freshness, validity, confidence)
-- [ ] Frontend: sources, upload wizard, mapping, validation report, summary, history
-- [ ] Tests: valid import, invalid rows surfaced, duplicate blocked, isolation
+- [x] Data sources (MANUAL, CSV)
+- [x] CSV upload with type, size and row limits
+- [x] Parser with delimiter detection, preview, column suggestion, mapping
+- [x] Validation rules (plan §15) with per-row errors retained
+- [x] Commit (idempotent), import history, duplicate-commit prevention, cancel before commit
+- [x] Data quality module (completeness, validity, freshness, errors, confidence)
+- [x] Frontend: sources, upload wizard, mapping, validation report, summary, history, quality
+- [x] Tests: valid import, invalid rows surfaced, duplicate blocked, isolation
 
 ## Sprint 4 — Metrics engine
 
 - [ ] Metrics CRUD, formulas, dependencies
+- [ ] Manual data entry (plan §2), reusing the import validation rules
 - [ ] Metric values, targets, thresholds
 - [ ] Calculation service with topological ordering and cycle detection
 - [ ] Recalculation after import

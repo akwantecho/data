@@ -6,6 +6,9 @@ import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthorizationGuard } from './auth/guards/authorization.guard';
 import { BranchesModule } from './branches/branches.module';
+import { DataQualityModule } from './data-quality/data-quality.module';
+import { DataSourcesModule } from './data-sources/data-sources.module';
+import { ImportsModule } from './imports/imports.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { IndustriesModule } from './industries/industries.module';
 import { OrganizationUsersModule } from './organization-users/organization-users.module';
@@ -43,6 +46,9 @@ import { validateEnv, type Env } from './config/env';
     OrganizationUsersModule,
     BranchesModule,
     DepartmentsModule,
+    DataSourcesModule,
+    ImportsModule,
+    DataQualityModule,
     PlatformModule,
   ],
   providers: [

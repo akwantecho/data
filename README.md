@@ -14,8 +14,9 @@ Trusted Data → Structured Metrics → Business Context → Performance Evaluat
 MVP industries: **Healthcare**, **Hospitality / Tourism**, **Real Estate**.
 Architecture: **Universal Core + Industry Packs + Organization Customization**.
 
-> **Status: Sprint 2 complete** — foundation, authentication, multi-tenancy,
-> platform separation and organization structure. Data import lands in Sprint 3.
+> **Status: Sprint 3 complete** — foundation, authentication, multi-tenancy,
+> organization structure and the CSV import engine. The metrics engine lands in
+> Sprint 4.
 > See [`docs/current-state.md`](docs/current-state.md).
 
 ## Stack
@@ -79,6 +80,9 @@ apps/
     src/config/        Validated environment
     src/health/        Health endpoint
     src/branches/      Branch CRUD
+    src/data-quality/  Rule-based data quality
+    src/data-sources/  Where data comes from
+    src/imports/       CSV pipeline: parse, validate, commit
     src/departments/   Department CRUD
     src/industries/    Industry reference data
     src/organizations/ Tenant-scoped organization profile

@@ -66,7 +66,7 @@ Authentication is the default: a route with no marker still requires a valid
 session. Membership is re-read from the database on every tenant request, so
 removing a user or suspending an organization takes effect immediately.
 
-## Implemented (Sprints 0–2)
+## Implemented (Sprints 0–3)
 
 ### `GET /api/health`
 
@@ -195,6 +195,55 @@ remove the organization's last administrator.
 may belong to other organizations). Access ends on the member's very next request —
 `AuthorizationGuard` re-reads membership rather than trusting the token. Refused for
 the last administrator.
+
+### `GET/POST /api/data-sources`, `PATCH/DELETE /api/data-sources/:id`
+
+Read for any member; create and update for `ORGANIZATION_ADMIN` and `ANALYST`
+(analysts import data, so they manage what they import from); delete for
+`ORGANIZATION_ADMIN`, and only while the source has no import history.
+
+### The import pipeline
+
+Five steps, each persisted, so an import is an auditable operation rather than a
+transient upload (plan §14). Upload/map/validate/commit/cancel require
+`ORGANIZATION_ADMIN` or `ANALYST`; reading is open to any member.
+
+| Step | Route                        | Notes                                                                                                                                                                                                        |
+| ---- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1    | `POST /imports/upload`       | `multipart/form-data` with `file` and optional `dataSourceId`. `.csv` only, 10 MB and 50,000 rows maximum. Returns columns, a suggested mapping, sample rows and the metric codes this organization accepts. |
+| 2    | `POST /imports/:id/map`      | `{ metricCode, period, value, branchCode?, departmentCode?, currency? }` — each value is a **column name from the file**.                                                                                    |
+| 3    | `POST /imports/:id/validate` | Checks every row and stores the outcome. Re-runnable after a mapping fix.                                                                                                                                    |
+| 4    | `POST /imports/:id/commit`   | Writes accepted rows into `metric_values`.                                                                                                                                                                   |
+| —    | `POST /imports/:id/cancel`   | Abandons an import before commit; the record and rows are kept.                                                                                                                                              |
+
+Reading: `GET /imports` (paginated), `GET /imports/:id` (summary plus issues), and
+`GET /imports/:id/rows?status=REJECTED` for the rows exactly as received.
+
+**The expected CSV shape** is one row per measurement:
+
+```text
+Metric,Period,Value,Branch
+revenue,2026-01,128400,muscat
+customers,2026-01,1240,muscat
+```
+
+Periods are written as `2026-01` (month), `2026-Q1`, `2026-W05`, `2026` or
+`2026-01-31`, and the shape decides the period type — which must match the metric's
+own frequency.
+
+**Duplicate protection**: an import is unique on `(organization, file checksum)`.
+Re-uploading a file that was already committed returns `CONFLICT`; re-uploading one
+that was cancelled or abandoned simply replaces it. Committing twice is refused.
+
+**Idempotence**: metric values are keyed by
+`(metric, period, branch, department)`, so re-importing a corrected file for the
+same period replaces the value instead of double counting.
+
+### `GET /api/data-quality`
+
+Rule-based quality for the organization (plan §16): overall score, completeness,
+validity, freshness, days since the last import, rejected-row count, confidence and
+a per-source breakdown. Any member role.
 
 ### `GET /api/platform/organizations`
 

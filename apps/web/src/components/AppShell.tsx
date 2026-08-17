@@ -25,9 +25,9 @@ const TENANT_NAV: NavItem[] = [
   { label: 'Decision Center' },
   { label: 'Reports' },
   { label: 'AI Analyst' },
-  { label: 'Data Sources', section: 'Data' },
-  { label: 'Imports' },
-  { label: 'Data Quality' },
+  { label: 'Data Sources', to: '/data/sources', section: 'Data' },
+  { label: 'Imports', to: '/data/imports' },
+  { label: 'Data Quality', to: '/data/quality' },
   { label: 'Organization', to: '/settings/organization', section: 'Organization' },
   { label: 'Branches', to: '/settings/branches' },
   { label: 'Departments', to: '/settings/departments' },
@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="app-shell__main">
         <header className="app-shell__topbar">
-          <span className="state">Sprint 2 — organization structure</span>
+          <span className="state">Sprint 3 — data import engine</span>
           <UserMenu />
         </header>
         <main className="app-shell__content">{children}</main>

@@ -51,7 +51,12 @@ An import is an auditable operation. The raw row is preserved in
 `data_import_rows.raw_data` alongside the normalised `parsed_data`, and every
 rejection is explained by a `data_validation_errors` row. Invalid data is never
 silently discarded. `data_imports` is unique on `(organization_id, checksum)`,
-which blocks a duplicate commit of the same file.
+which blocks a duplicate commit of the same file while leaving the same content
+importable by a different tenant.
+
+`datasets` and `dataset_columns` are not used yet: the CSV importer maps a
+long-format file (metric, period, value) straight onto `metric_values`. They exist
+for future source types that carry their own schema.
 
 ### Metrics — `metrics`, `metric_formulas`, `metric_values`, `metric_targets`, `metric_thresholds`, `metric_dependencies`
 
@@ -61,7 +66,11 @@ Uniqueness is enforced per scope: `(organization_id, code)` and `(industry_id, c
 
 `metric_values` is unique on
 `(organization_id, metric_id, branch_id, department_id, period_type, period_start)`
-so a period can hold exactly one value per slice, making imports idempotent.
+so a period holds exactly one value per slice. PostgreSQL treats NULLs as distinct
+in a unique index, so that constraint cannot cover organization-level rows (null
+branch and department); the import commit therefore replaces by explicit match
+rather than relying on an upsert, which is what actually makes re-imports
+idempotent.
 `is_calculated` marks values derived from a formula; `metric_dependencies` gives
 the calculation service a dependency graph to order and cycle-check.
 
