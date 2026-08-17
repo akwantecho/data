@@ -3,3 +3,4 @@ export * from './api.js';
 export * from './auth.js';
 export * from './organization.js';
 export * from './imports.js';
+export * from './metrics.js';

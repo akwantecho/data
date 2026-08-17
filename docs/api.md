@@ -66,7 +66,7 @@ Authentication is the default: a route with no marker still requires a valid
 session. Membership is re-read from the database on every tenant request, so
 removing a user or suspending an organization takes effect immediately.
 
-## Implemented (Sprints 0–3)
+## Implemented (Sprints 0–4)
 
 ### `GET /api/health`
 
@@ -238,6 +238,58 @@ that was cancelled or abandoned simply replaces it. Committing twice is refused.
 **Idempotence**: metric values are keyed by
 `(metric, period, branch, department)`, so re-importing a corrected file for the
 same period replaces the value instead of double counting.
+
+### `GET/POST /api/metrics`, `GET/PATCH/DELETE /api/metrics/:id`
+
+Read for any member; create and update for `ORGANIZATION_ADMIN` and `ANALYST`;
+delete for `ORGANIZATION_ADMIN` only, and only for a metric with no stored values,
+no dependants and no industry-pack origin — otherwise `CONFLICT` pointing at
+deactivation.
+
+A metric carries `code`, `name`, `unit`, `aggregationType`, `frequency`,
+`direction` and an optional `category`. `aggregationType: FORMULA` makes it a
+calculated metric and requires a `formula`.
+
+**Formulas** are arithmetic over metric codes: `net_profit / revenue * 100`. They
+are parsed, never evaluated as code (ADR-0008), and validated on save: the syntax
+must parse, every referenced code must exist in the organization, and the result
+must not create a cycle — the error names the loop.
+
+### `GET /api/metrics/:id`
+
+The metric detail payload (plan §25): definition, formula, dependencies and
+dependants, current and previous value, period-over-period change, target and
+variance to it, thresholds and the resulting status, the trend series and the last
+update time.
+
+### `GET /api/metrics/:id/trend`
+
+The series alone, oldest first, optionally for one branch.
+
+### `POST /api/metrics/:id/values`
+
+Manual data entry (plan §2). Body `{ period, value, branchId?, departmentId? }`.
+The period is parsed exactly as an import parses it and must match the metric's
+frequency; a calculated metric is refused. Entering a value replaces any previous
+value for the same period and slice, then triggers a recalculation of that period.
+
+### `PUT /api/metrics/:id/target`
+
+Body `{ period, targetValue, minValue?, maxValue?, branchId? }`. Replaces the
+target for that period rather than adding another.
+
+### `PUT /api/metrics/:id/threshold`
+
+Body `{ warningValue?, criticalValue?, isRelativeToTarget? }`. A relative threshold
+is read as a percentage of the target. Direction decides what a breach is: for
+`LOWER_IS_BETTER` a value _above_ the limit breaches it.
+
+### `POST /api/metrics/recalculate`
+
+Recalculates every formula metric for the organization and returns
+`{ calculated, skipped }`, where each skip names the metric, the period and why —
+`MISSING_INPUT` with the missing code, or `DIVISION_BY_ZERO`. Committing an import
+runs the same recalculation automatically, scoped to the periods the file touched.
 
 ### `GET /api/data-quality`
 

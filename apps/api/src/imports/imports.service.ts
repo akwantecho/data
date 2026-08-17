@@ -13,6 +13,7 @@ import type {
 import { PrismaService } from '../prisma/prisma.service';
 import { ApiException } from '../common/errors/api-exception';
 import { AuditService } from '../audit/audit.service';
+import { CalculationService } from '../metrics/calculation.service';
 import { parseCsv, suggestMapping } from './csv-parser';
 import { validateRows, type ImportMapping, type MetricDefinition } from './validation';
 import type { ImportMappingDto } from './imports.dto';
@@ -57,6 +58,7 @@ export class ImportsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly calculation: CalculationService,
   ) {}
 
   async upload(
@@ -388,6 +390,17 @@ export class ImportsService {
       { timeout: 60_000 },
     );
 
+    // Formula metrics derived from what just landed are now out of date; only the
+    // periods this file touched need recalculating (plan §14).
+    const touchedPeriods = uniquePeriods(prepared);
+    const recalculation = await this.calculation.recalculate(organizationId, touchedPeriods);
+
+    if (recalculation.skipped.length > 0) {
+      this.logger.warn(
+        `Import ${importId}: ${recalculation.skipped.length} calculated values could not be produced`,
+      );
+    }
+
     const committed = await this.prisma.dataImport.findUniqueOrThrow({
       where: { id: dataImport.id },
       select: IMPORT_SELECT,
@@ -403,11 +416,14 @@ export class ImportsService {
         fileName: committed.fileName,
         valuesWritten: written,
         rowsRejected: committed.rowsRejected,
+        valuesCalculated: recalculation.calculated,
       },
       ipAddress,
     });
 
-    this.logger.log(`Import ${importId} committed ${written} metric values`);
+    this.logger.log(
+      `Import ${importId} committed ${written} metric values and calculated ${recalculation.calculated}`,
+    );
 
     return { import: toSummary(committed), valuesWritten: written };
   }
@@ -665,6 +681,22 @@ export class ImportsService {
 
     return new Map(rows.map((row) => [row.code.toLowerCase(), row.id]));
   }
+}
+
+/** The distinct periods an import wrote to, for a targeted recalculation. */
+function uniquePeriods(
+  rows: Array<{ periodType: StoredRow['periodType']; periodStart: Date }>,
+): Array<{ periodType: StoredRow['periodType']; periodStart: Date }> {
+  const seen = new Map<string, { periodType: StoredRow['periodType']; periodStart: Date }>();
+
+  for (const row of rows) {
+    seen.set(`${row.periodType}|${row.periodStart.toISOString()}`, {
+      periodType: row.periodType,
+      periodStart: row.periodStart,
+    });
+  }
+
+  return [...seen.values()];
 }
 
 interface StoredRow {

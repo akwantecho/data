@@ -32,6 +32,10 @@ export const METRIC_UNITS = [
 ] as const;
 export type MetricUnit = (typeof METRIC_UNITS)[number];
 
+/** Period a stored value belongs to; mirrors the metric frequencies. */
+export const PERIOD_TYPES = ['DAY', 'WEEK', 'MONTH', 'QUARTER', 'YEAR'] as const;
+export type PeriodType = (typeof PERIOD_TYPES)[number];
+
 export const METRIC_FREQUENCIES = ['DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY'] as const;
 export type MetricFrequency = (typeof METRIC_FREQUENCIES)[number];
 

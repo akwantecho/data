@@ -646,3 +646,12 @@ a.button--primary {
 a.button:hover {
   text-decoration: none;
 }
+
+/* --- Metric catalogue ------------------------------------------------------ */
+
+.metric-group__title {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

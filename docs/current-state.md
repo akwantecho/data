@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: end of Sprint 3.
+Last updated: end of Sprint 4.
 
 ## Repository state before Sprint 0
 
@@ -21,21 +21,23 @@ inherited, adapted or removed; everything described below was created in Sprint 
 | Security baseline      | Helmet, CORS allow-list, rate limiting, 1 MB body cap, Nginx CSP                           |
 | Tooling                | ESLint 9 flat config, Prettier, Jest, Vitest, GitHub Actions CI                            |
 | Containers             | `docker-compose.yml` with db/api/web; multi-stage Dockerfiles                              |
-| Documentation          | Architecture, database, API, industry packs, 6 ADRs, this file                             |
+| Documentation          | Architecture, database, API, industry packs, 8 ADRs, this file                             |
 | Authentication         | Argon2id passwords, httpOnly cookie sessions, rotating refresh tokens with reuse detection |
 | Authorization          | Global auth guard, `@Roles` membership checks, `@PlatformAdminOnly` separation             |
 | Tenancy                | Organization scope from the session only; membership re-read per request                   |
 | Audit                  | `AuditService` writing before/after entries for organization and platform changes          |
 | Seed data              | Platform admin, 3 industries, 3 organizations with branches and 3 roles each               |
 | Organization structure | Industry selection, branches, departments, team management, settings UI                    |
+| Data import            | CSV upload → map → validate → commit, auditable rows, duplicate protection, quality score  |
+| Metrics engine         | Metrics CRUD, parsed formulas with a dependency graph, server-side calculation, targets    |
 
 ## Verified locally
 
 - `pnpm -r lint` — clean
 - `pnpm -r typecheck` — clean
 - `pnpm -r build` — API, web and shared types all build
-- `pnpm -r test` — 142 API unit tests, 56 web tests
-- `pnpm --filter @sip/api test:e2e` — 92 integration tests against real PostgreSQL
+- `pnpm -r test` — 180 API unit tests, 67 web tests
+- `pnpm --filter @sip/api test:e2e` — 124 integration tests against real PostgreSQL
 - `prisma migrate deploy` + `prisma migrate diff --exit-code` — migrations reproduce the schema
 - API booted from `dist`: login → `/auth/me` → `/organizations/current` → refresh → logout,
   with platform routes refused to tenants and tenant routes refused to platform staff
@@ -45,6 +47,10 @@ inherited, adapted or removed; everything described below was created in Sprint 
 - Full browser run of the settings screens: creating a branch, the duplicate-code
   conflict surfacing the server message, a department attached to that branch, a role
   change applying, the organization profile saving, and a viewer seeing no write controls
+- Full browser run of the metrics engine: defining a chained formula through the UI,
+  a bad formula refused with the server's reason, two hand-entered values producing a
+  calculated `net_profit` (29,650) and `net_margin` (23.0919%), and a target and
+  thresholds driving the status badge — values confirmed directly in PostgreSQL
 - Full browser run of the import wizard against a deliberately messy 10-row CSV:
   suggested mapping, validation reporting 6 valid and 4 rejected with per-row reasons,
   commit writing 6 metric values, the rejected rows listed on the import detail page,
@@ -59,9 +65,9 @@ is proven until someone runs it on a machine with Docker.
 
 ## Not built yet (by design)
 
-Metrics engine and manual entry (Sprint 4), industry pack content (5), dashboard and
-analytics (6), health/alerts/insights (7), goals and decisions (8), AI analyst (9),
-reports and production hardening (10).
+Industry pack content (Sprint 5), dashboard and analytics (6),
+health/alerts/insights (7), goals and decisions (8), AI analyst (9), reports and
+production hardening (10).
 
 ## Deviations from the plan document
 
@@ -95,6 +101,9 @@ reports and production hardening (10).
     Plan §14 ends the flow at "recalculate affected metrics", and §15 validates metric
     codes, so the long-format CSV maps onto `metric_values`. The `datasets` and
     `dataset_columns` tables stay unused until a source type needs arbitrary schemas.
-11. **Seed data landed in Sprint 1 rather than Sprint 10.** Plan §48 asks for seeds
+11. **Formulas cannot aggregate across periods or slices yet** (no "sum of last 12
+    months", no organization total derived from branches). Those are read-time
+    analytics and belong with the dashboard in Sprint 6.
+12. **Seed data landed in Sprint 1 rather than Sprint 10.** Plan §48 asks for seeds
     that make the interface demonstrable immediately, and login is not demonstrable
     without users. Metric, goal and decision seeds still follow later.

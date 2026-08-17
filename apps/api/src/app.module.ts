@@ -9,6 +9,7 @@ import { BranchesModule } from './branches/branches.module';
 import { DataQualityModule } from './data-quality/data-quality.module';
 import { DataSourcesModule } from './data-sources/data-sources.module';
 import { ImportsModule } from './imports/imports.module';
+import { MetricsModule } from './metrics/metrics.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { IndustriesModule } from './industries/industries.module';
 import { OrganizationUsersModule } from './organization-users/organization-users.module';
@@ -49,6 +50,7 @@ import { validateEnv, type Env } from './config/env';
     DataSourcesModule,
     ImportsModule,
     DataQualityModule,
+    MetricsModule,
     PlatformModule,
   ],
   providers: [

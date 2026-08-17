@@ -58,15 +58,16 @@ Legend: `[x]` done · `[ ]` not started
 - [x] Frontend: sources, upload wizard, mapping, validation report, summary, history, quality
 - [x] Tests: valid import, invalid rows surfaced, duplicate blocked, isolation
 
-## Sprint 4 — Metrics engine
+## Sprint 4 — Metrics engine ✅
 
-- [ ] Metrics CRUD, formulas, dependencies
-- [ ] Manual data entry (plan §2), reusing the import validation rules
-- [ ] Metric values, targets, thresholds
-- [ ] Calculation service with topological ordering and cycle detection
-- [ ] Recalculation after import
-- [ ] Frontend: metrics list, create/edit, detail, target and threshold configuration
-- [ ] Tests: formulas, division by zero, missing dependencies, historical values
+- [x] Metrics CRUD, formulas, dependencies (stored both ways)
+- [x] Manual data entry (plan §2), reusing the import period and frequency rules
+- [x] Metric values, targets, thresholds (absolute and relative to target)
+- [x] Calculation service with topological ordering and cycle detection
+- [x] Recalculation after import, scoped to the periods it touched
+- [x] Frontend: metrics catalogue, create/edit, detail with trend chart, target and
+      threshold configuration, manual entry
+- [x] Tests: formulas, division by zero, missing dependencies, historical values
 
 ## Sprint 5 — Industry packs
 

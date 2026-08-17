@@ -1,6 +1,6 @@
 # Architecture
 
-> Status: Sprint 3 complete (foundation, auth, tenancy, structure, data import).
+> Status: Sprint 4 complete (foundation, auth, tenancy, structure, import, metrics).
 
 ## 1. What this system is
 
@@ -143,7 +143,10 @@ Delivered:
 - **Sprint 3** — data sources, the CSV import pipeline (upload → map → validate →
   commit), row-level validation with retained rejections, and rule-based data
   quality.
+- **Sprint 4** — metrics CRUD, targets and thresholds, the formula engine
+  (ADR-0008), recalculation after imports, manual data entry, and the metric
+  catalogue and detail pages.
 
-Not built yet: metrics engine (4),
+Not built yet:
 industry pack content (5), dashboard and analytics (6), health/alerts/insights (7),
 goals and decisions (8), AI analyst (9), reports and hardening (10).

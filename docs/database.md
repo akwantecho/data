@@ -71,8 +71,11 @@ in a unique index, so that constraint cannot cover organization-level rows (null
 branch and department); the import commit therefore replaces by explicit match
 rather than relying on an upsert, which is what actually makes re-imports
 idempotent.
-`is_calculated` marks values derived from a formula; `metric_dependencies` gives
-the calculation service a dependency graph to order and cycle-check.
+`is_calculated` marks values derived from a formula, and `source_type` records
+where a value came from (`CSV`, `MANUAL`, `CALCULATED`). `metric_formulas` holds the
+expression plus its referenced codes; `metric_dependencies` mirrors those references
+as rows, so the graph is queryable rather than only parseable. Calculated values are
+replaced wholesale on recalculation, never appended (ADR-0008).
 
 ### Industry packs — `industry_packs`, `industry_pack_metrics`, `industry_pack_health_models`, `industry_pack_insight_rules`, `organization_industry_packs`
 

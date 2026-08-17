@@ -19,7 +19,7 @@ const TENANT_NAV: NavItem[] = [
   { label: 'System Status', to: '/system' },
   { label: 'Overview' },
   { label: 'Analytics' },
-  { label: 'Metrics' },
+  { label: 'Metrics', to: '/metrics' },
   { label: 'Goals' },
   { label: 'Insights' },
   { label: 'Decision Center' },
@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="app-shell__main">
         <header className="app-shell__topbar">
-          <span className="state">Sprint 3 — data import engine</span>
+          <span className="state">Sprint 4 — metrics engine</span>
           <UserMenu />
         </header>
         <main className="app-shell__content">{children}</main>

@@ -4,6 +4,8 @@ import { LoginPage } from '../features/auth/LoginPage';
 import { ProtectedRoute } from '../features/auth/ProtectedRoute';
 import { PlatformOrganizationsPage } from '../features/platform/PlatformOrganizationsPage';
 import { DataQualityPage } from '../features/data/DataQualityPage';
+import { MetricDetailPage } from '../features/metrics/MetricDetailPage';
+import { MetricsPage } from '../features/metrics/MetricsPage';
 import { DataSourcesPage } from '../features/data/DataSourcesPage';
 import { ImportDetailPage } from '../features/data/ImportDetailPage';
 import { ImportWizardPage } from '../features/data/ImportWizardPage';
@@ -28,6 +30,8 @@ export function App() {
                 <Route path="/" element={<Navigate to="/system" replace />} />
                 <Route path="/system" element={<SystemStatusPage />} />
                 <Route path="/platform/organizations" element={<PlatformOrganizationsPage />} />
+                <Route path="/metrics" element={<MetricsPage />} />
+                <Route path="/metrics/:id" element={<MetricDetailPage />} />
                 <Route path="/data" element={<Navigate to="/data/sources" replace />} />
                 <Route path="/data/sources" element={<DataSourcesPage />} />
                 <Route path="/data/imports" element={<ImportsPage />} />
