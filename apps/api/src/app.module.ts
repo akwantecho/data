@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AlertsModule } from './alerts/alerts.module';
+import { AnalysisModule } from './analysis/analysis.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
@@ -18,6 +20,8 @@ import { OrganizationUsersModule } from './organization-users/organization-users
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
 import { HealthModule } from './health/health.module';
+import { InsightsModule } from './insights/insights.module';
+import { OrganizationHealthModule } from './organization-health/organization-health.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { PlatformModule } from './platform/platform.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -55,6 +59,10 @@ import { validateEnv, type Env } from './config/env';
     DataQualityModule,
     MetricsModule,
     AnalyticsModule,
+    OrganizationHealthModule,
+    AlertsModule,
+    InsightsModule,
+    AnalysisModule,
     PlatformModule,
   ],
   providers: [

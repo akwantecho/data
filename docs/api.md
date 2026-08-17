@@ -320,6 +320,49 @@ Any member role. `breakdown=BRANCH|DEPARTMENT` compares one metric (`metricId`)
 across slices; `breakdown=METRIC` compares several metrics (`metricIds`, comma
 separated, max 6) over the same window, in the order asked for.
 
+### `GET /api/health/current`
+
+Any member role. The latest health score, the one before it, the bands it is read
+against and the model that produced it. The score carries its full breakdown:
+every category with its weight and score, and every metric with its value, target,
+score, contribution and the basis it was scored on. Optional `branchId`.
+
+`GET /api/health` (no sub-path) is the unauthenticated service liveness probe and
+is unrelated — see the Health section above.
+
+### `GET /api/health/history`
+
+Any member role. Overall score and band per period, oldest first. `limit` up to 60.
+
+### `POST /api/health/recalculate`
+
+`ORGANIZATION_ADMIN`, `ANALYST`. Rescores every period the organization has data
+for, replacing existing scores rather than adding to them.
+
+### `POST /api/analysis/run`
+
+`ORGANIZATION_ADMIN`, `ANALYST`. Runs health, then alerts, then insights for the
+latest period with data — the same sequence an import commit runs (plan §49).
+Returns what each engine did.
+
+### `GET /api/alerts`, `GET /api/alerts/:id`
+
+Any member role. Paginated, filterable by `status`, `severity` and `metricId`. Each
+alert carries its rule, metric, period, severity, status and the evidence that
+raised it; the detail adds every status transition with its actor and note.
+
+### `PATCH /api/alerts/:id/status`
+
+`ORGANIZATION_ADMIN`, `ANALYST`. Body `{ status, note? }`. Moves an alert through
+`OPEN → ACKNOWLEDGED → RESOLVED | DISMISSED`; a closed alert cannot be reopened
+(`CONFLICT`), because that was a decision.
+
+### `GET /api/insights`, `GET /api/insights/:id`
+
+Any member role. Paginated, filterable by `severity` and `category`. Every insight
+carries its narrative and one evidence row per figure it quotes, including which
+condition that figure satisfied.
+
 ### `GET /api/industry-packs`
 
 Any member role. What applies to this organization: the industry, the packs
@@ -381,17 +424,17 @@ members out of every tenant route on their next request.
 
 Built sprint by sprint, per the execution plan:
 
-| Sprint | Endpoints                                                                                                               |
-| ------ | ----------------------------------------------------------------------------------------------------------------------- |
-| 2      | `/branches`, `/departments`, `/organization-users`, `/industries`                                                       |
-| 3      | `/data-sources`, `/imports/upload`, `/imports/:id/map`, `/imports/:id/validate`, `/imports/:id/commit`, `/data-quality` |
-| 4      | `/metrics`, `/metrics/:id/values`, `/metrics/:id/trend`, `/metric-targets`                                              |
-| 5      | `/industry-packs`, `/industry-packs/:id/install`, `/platform/industry-packs`, `/platform/industry-packs/sync`           |
-| 6      | `/dashboard/overview`, `/analytics/options`, `/analytics/metric/:metricId`, `/analytics/comparison`                     |
-| 7      | `/health/current`, `/health/history`, `/alerts`, `PATCH /alerts/:id/status`, `/insights`                                |
-| 8      | `/goals`, `/decisions`, `POST /decisions/:id/review`                                                                    |
-| 9      | `POST /ai/query`, `/ai/conversations`                                                                                   |
-| 10     | `/audit`, `/reports`                                                                                                    |
+| Sprint | Endpoints                                                                                                                        |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| 2      | `/branches`, `/departments`, `/organization-users`, `/industries`                                                                |
+| 3      | `/data-sources`, `/imports/upload`, `/imports/:id/map`, `/imports/:id/validate`, `/imports/:id/commit`, `/data-quality`          |
+| 4      | `/metrics`, `/metrics/:id/values`, `/metrics/:id/trend`, `/metric-targets`                                                       |
+| 5      | `/industry-packs`, `/industry-packs/:id/install`, `/platform/industry-packs`, `/platform/industry-packs/sync`                    |
+| 6      | `/dashboard/overview`, `/analytics/options`, `/analytics/metric/:metricId`, `/analytics/comparison`                              |
+| 7      | `/health/current`, `/health/history`, `/health/recalculate`, `/analysis/run`, `/alerts`, `PATCH /alerts/:id/status`, `/insights` |
+| 8      | `/goals`, `/decisions`, `POST /decisions/:id/review`                                                                             |
+| 9      | `POST /ai/query`, `/ai/conversations`                                                                                            |
+| 10     | `/audit`, `/reports`                                                                                                             |
 
 ## Rate limiting
 

@@ -4,6 +4,8 @@ import { LoginPage } from '../features/auth/LoginPage';
 import { ProtectedRoute } from '../features/auth/ProtectedRoute';
 import { AnalyticsPage } from '../features/analytics/AnalyticsPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
+import { AlertsPage } from '../features/health/AlertsPage';
+import { InsightsPage } from '../features/health/InsightsPage';
 import { PlatformOrganizationsPage } from '../features/platform/PlatformOrganizationsPage';
 import { PlatformPacksPage } from '../features/industry-packs/PlatformPacksPage';
 import { DataQualityPage } from '../features/data/DataQualityPage';
@@ -33,6 +35,8 @@ export function App() {
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/alerts" element={<AlertsPage />} />
+                <Route path="/insights" element={<InsightsPage />} />
                 <Route path="/system" element={<SystemStatusPage />} />
                 <Route path="/platform/organizations" element={<PlatformOrganizationsPage />} />
                 <Route path="/platform/industry-packs" element={<PlatformPacksPage />} />

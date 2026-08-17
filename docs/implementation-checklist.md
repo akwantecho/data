@@ -92,13 +92,15 @@ Legend: `[x]` done · `[ ]` not started
 - [x] Twelve months of deterministic sample history in the seed (plan §48)
 - [x] Tests: dashboard numbers match backend calculations; filters apply consistently
 
-## Sprint 7 — Health, alerts and insights
+## Sprint 7 — Health, alerts and insights ✅
 
-- [ ] Health model, category weights, calculator, bands
-- [ ] Alert rules, alert generation, status workflow
-- [ ] Insight rules and evidence
-- [ ] Frontend: health overview, alerts, insights, evidence drawer
-- [ ] Tests: every alert/insight explains why it was created
+- [x] Health model, category weights, calculator, bands
+- [x] Alert generation from installed rules, with auto-resolution and refreshed figures
+- [x] Alert status workflow, every transition recorded with actor and note
+- [x] Deterministic insight evaluation, written with its evidence in one transaction
+- [x] An import commit runs health, then alerts, then insights (plan §49)
+- [x] Frontend: health panel with per-category explanation, alerts, insights, evidence drawer
+- [x] Tests: every alert/insight explains why it was created
 
 ## Sprint 8 — Goals and decision center
 

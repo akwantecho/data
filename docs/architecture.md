@@ -160,6 +160,10 @@ Delivered:
   analytics page: one request per screen, global date/branch/department filters,
   period comparison, branch and department breakdowns, and twelve months of sample
   history in the seed.
+- **Sprint 7** — the health score engine, alert generation with a status workflow,
+  and deterministic insight detection (ADR-0011). All three read through the
+  analytics layer, all three explain themselves, and an import commit runs the three
+  in order.
 
 Not built yet:
 industry pack content (5), dashboard and analytics (6), health/alerts/insights (7),

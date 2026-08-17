@@ -156,6 +156,41 @@ export class AnalyticsService {
   }
 
   /**
+   * The context for exactly one period, and the period before it.
+   *
+   * The engines in Sprint 7 read their figures through this, so a rule can never
+   * reach a different number from the dashboard: both are answered by the same
+   * aggregation, including the slice roll-up and the recomputation of formulas
+   * from their inputs (ADR-0010).
+   */
+  async contextForPeriod(
+    organizationId: string,
+    period: { periodStart: Date },
+    branchId: string | null = null,
+  ): Promise<AnalyticsContext> {
+    const from = period.periodStart.toISOString().slice(0, 10);
+    const previous = previousWindow(from, from);
+
+    const branch = branchId
+      ? await this.prisma.branch.findFirst({
+          where: { id: branchId, organizationId },
+          select: { id: true, name: true },
+        })
+      : null;
+
+    return this.buildContext(organizationId, {
+      from,
+      to: from,
+      branchId: branch?.id ?? null,
+      departmentId: null,
+      branchName: branch?.name ?? null,
+      departmentName: null,
+      previousFrom: previous.from,
+      previousTo: previous.to,
+    });
+  }
+
+  /**
    * Loads every metric and every stored value both windows need, in one pass.
    *
    * The whole organization is read rather than only the metrics asked for, because
@@ -183,11 +218,13 @@ export class AnalyticsService {
           metric: { select: { code: true } },
         },
       }),
+      // Targets are loaded from the beginning, not just the window: a target set in
+      // March is the standard September is judged against until someone sets a new
+      // one, so resolving "the target in force" needs the ones set before the
+      // window as well.
       this.prisma.metricTarget.findMany({
-        where: {
-          organizationId,
-          periodStart: { gte: new Date(window.previousFrom), lte: new Date(window.to) },
-        },
+        where: { organizationId, periodStart: { lte: new Date(window.to) } },
+        orderBy: { periodStart: 'asc' },
         select: {
           periodStart: true,
           branchId: true,
@@ -306,6 +343,13 @@ export class AnalyticsService {
   /**
    * The target for the window, and the periods it covers.
    *
+   * **A target stands until it is replaced.** An organization sets a monthly target
+   * once and reports against it for months; requiring a fresh row every period
+   * would mean every newly imported month arrived with nothing to be judged
+   * against — no variance, no health score, no missed-target alert.
+   *
+   * It applies forward only: a target set in March says nothing about January.
+   *
    * A target is a figure someone set, never a derived one, so it aggregates by its
    * own rule even when the metric it belongs to is calculated.
    */
@@ -314,15 +358,46 @@ export class AnalyticsService {
     metric: MetricRow,
     filter: SliceFilter,
   ): { value: Prisma.Decimal | null; periods: string[] } {
+    const set = context.targets
+      .filter(
+        (target) =>
+          target.metricCode === metric.code &&
+          (target.branchId === filter.branchId || target.branchId === null),
+      )
+      .sort((a, b) => a.periodStart.localeCompare(b.periodStart));
+
+    if (set.length === 0) {
+      return { value: null, periods: [] };
+    }
+
+    // The periods the metric itself reported in the window are the ones a target
+    // can cover: a target for a period nothing was reported in compares to nothing.
+    const values = this.within(context.values, context.window.from, context.window.to);
+    const reported = periodsFor(metric.code, context.shapes, values).filter(
+      (period) => period >= context.window.from && period <= context.window.to,
+    );
+
+    const inForce: StoredValue[] = [];
+
+    for (const period of reported) {
+      const applicable = [...set].reverse().find((target) => target.periodStart <= period);
+
+      if (applicable) {
+        inForce.push({ ...applicable, periodStart: period });
+      }
+    }
+
+    if (inForce.length === 0) {
+      return { value: null, periods: [] };
+    }
+
     const type = metric.aggregationType === 'FORMULA' ? 'AVERAGE' : metric.aggregationType;
     const shapes = new Map<string, MetricShape>([
       [metric.code, { code: metric.code, aggregationType: type, formula: null }],
     ]);
 
-    const targets = this.within(context.targets, context.window.from, context.window.to);
-    const periods = periodsFor(metric.code, shapes, targets);
-
-    const aggregate = aggregateMetric(metric.code, shapes, targets, periods, {
+    const periods = inForce.map((target) => target.periodStart);
+    const aggregate = aggregateMetric(metric.code, shapes, inForce, periods, {
       branchId: filter.branchId,
       departmentId: null,
     });

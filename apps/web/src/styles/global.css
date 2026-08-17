@@ -790,3 +790,45 @@ a.button:hover {
   background: color-mix(in srgb, var(--color-warning) 14%, transparent);
   color: var(--color-warning);
 }
+
+/* --- Health, alerts and insights ------------------------------------------ */
+
+.health-score {
+  align-items: baseline;
+  display: flex;
+  gap: var(--space-3);
+}
+
+.health-score__value {
+  font-size: 3rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.health-score__caption {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.drawer__scrim {
+  background: rgb(0 0 0 / 35%);
+  display: flex;
+  inset: 0;
+  justify-content: flex-end;
+  position: fixed;
+  z-index: 20;
+}
+
+.drawer {
+  background: var(--color-surface);
+  border-inline-start: 1px solid var(--color-border);
+  block-size: 100%;
+  inline-size: min(560px, 100%);
+  overflow-y: auto;
+  padding: var(--space-5);
+}
+
+.drawer > .stack {
+  margin-block-start: var(--space-4);
+}

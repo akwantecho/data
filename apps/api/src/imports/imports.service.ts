@@ -13,6 +13,7 @@ import type {
 import { PrismaService } from '../prisma/prisma.service';
 import { ApiException } from '../common/errors/api-exception';
 import { AuditService } from '../audit/audit.service';
+import { AnalysisService } from '../analysis/analysis.service';
 import { CalculationService } from '../metrics/calculation.service';
 import { parseCsv, suggestMapping } from './csv-parser';
 import { validateRows, type ImportMapping, type MetricDefinition } from './validation';
@@ -59,6 +60,7 @@ export class ImportsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly calculation: CalculationService,
+    private readonly analysis: AnalysisService,
   ) {}
 
   async upload(
@@ -401,6 +403,20 @@ export class ImportsService {
       );
     }
 
+    // The month is now complete, so the engines that read it run: health score,
+    // then alerts, then insights (plan §49). A failure here must not undo a
+    // committed import — the values are the record, the analysis is derived — so it
+    // is logged and the commit still succeeds.
+    const analysed = await this.analysis
+      .run(organizationId, touchedPeriods, actorId)
+      .catch((error: unknown) => {
+        this.logger.error(
+          `Import ${importId} committed, but the analysis failed: ${String(error)}`,
+        );
+
+        return [];
+      });
+
     const committed = await this.prisma.dataImport.findUniqueOrThrow({
       where: { id: dataImport.id },
       select: IMPORT_SELECT,
@@ -417,6 +433,8 @@ export class ImportsService {
         valuesWritten: written,
         rowsRejected: committed.rowsRejected,
         valuesCalculated: recalculation.calculated,
+        alertsRaised: analysed.reduce((total, run) => total + run.alerts.created, 0),
+        insightsCreated: analysed.reduce((total, run) => total + run.insights.created, 0),
       },
       ipAddress,
     });

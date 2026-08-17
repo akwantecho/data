@@ -94,24 +94,38 @@ was installed and at which version, so an upgrade path exists later.
 ### Health — `health_models`, `health_categories`, `health_metric_weights`, `health_scores`
 
 Weighted, two-level model: categories weigh into the overall score, metrics weigh
-inside a category (both 0–100, each level summing to 100). `health_scores` keeps
-the calculated score per period plus a `breakdown` JSON holding each contributing
-metric's normalised score — the score can always explain itself. Band labels and
-ranges live in `health_models.bands` (defaults in `@sip/shared-types`).
+inside a category (both 0–100, each level summing to 100). `health_scores` keeps the
+calculated score per period plus a `breakdown` JSON holding every category and every
+contributing metric — its value, its target, the score it reached, the basis it was
+scored on and the points it contributed — so the score can always explain itself
+(ADR-0011). A metric with no benchmark is excluded and its weight redistributed,
+which the breakdown also records. Band labels and ranges live in
+`health_models.bands` (defaults in `@sip/shared-types`).
+
+Scores are replaced per `(organization, model, branch, period)` rather than
+appended, so rescoring a corrected month leaves one row, not a history of attempts.
 
 ### Alerts — `alert_rules`, `alerts`, `alert_events`
 
 `alert_rules.code` is unique per organization, so an industry pack can install its
 rules idempotently and find them again later; `definition` carries the parameters
-for that rule type. `alerts.evidence` holds the numbers that triggered the alert.
-`alert_events` records every status transition (who moved it from OPEN to
-ACKNOWLEDGED, and why).
+for that rule type. `alerts.evidence` holds the statement and figures that triggered
+the alert; while the alert is live those figures are refreshed if the period is
+corrected, and frozen once someone resolves or dismisses it. One alert exists per
+`(rule, metric, period)` — the engine checks before raising, so re-running it after
+every import cannot fill the list with copies. `alert_events` records every status
+transition (who moved it from OPEN to ACKNOWLEDGED, and why), including the ones the
+engine makes itself when a condition passes.
 
 ### Insights — `insight_rules`, `insights`, `insight_evidence`
 
-Rules are deterministic definitions; each generated insight carries one
-`insight_evidence` row per supporting figure. An insight without evidence is a
-bug, not an insight.
+Rules are deterministic definitions installed by the industry pack; each generated
+insight carries one `insight_evidence` row per supporting figure, written in the
+same transaction as the insight itself — an insight without evidence is a bug, not
+an insight. `insight_evidence.detail` records which condition that figure satisfied
+(measure, operator, threshold, actual), so the reasoning is legible afterwards. One
+insight exists per `(rule, period)`, and it is not rewritten later: an insight is
+what was noticed at the time.
 
 ### Goals — `goals`, `goal_metrics`, `goal_updates`
 

@@ -9,6 +9,7 @@ import { KpiCard } from '../../components/KpiCard';
 import { SeriesChart } from '../../components/SeriesChart';
 import { describeApiError } from '../../lib/errors';
 import { useOrganization } from '../organization/organization-context';
+import { HealthPanel } from '../health/HealthPanel';
 import { analyticsKeys, fetchAnalyticsOptions, fetchOverview } from './dashboard-api';
 
 const EMPTY_FILTERS: AnalyticsFilterState = { from: '', to: '', branchId: '', departmentId: '' };
@@ -124,44 +125,14 @@ export function DashboardPage() {
                 <Stat label="Critical" value={overview.performance.critical} tone="negative" />
               </dl>
             </section>
-
-            <section className="card stack">
-              <h2 className="card__title">Organizational health</h2>
-              {overview.health ? (
-                <>
-                  <p className="form-hint">{overview.health.modelName}</p>
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th scope="col">Category</th>
-                        <th scope="col">Weight</th>
-                        <th scope="col">Score</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {overview.health.categories.map((category) => (
-                        <tr key={category.code}>
-                          <td>{category.name}</td>
-                          <td>{Number(category.weight)}%</td>
-                          <td>{category.score === null ? 'Not scored yet' : category.score}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <p className="form-hint">
-                    The model is installed and weighted; scores are calculated in a later sprint.
-                  </p>
-                </>
-              ) : (
-                <EmptyState message="No health model is installed. Install the industry pack in settings." />
-              )}
-            </section>
+            <HealthPanel branchId={filters.branchId} />{' '}
           </div>
 
           <div className="panel-grid">
             <AttentionPanel
               title="Alerts"
-              emptyMessage="No open alerts. The alerts engine arrives in a later sprint."
+              to="/alerts"
+              emptyMessage="No open alerts. Rules are evaluated after every import."
               items={overview.attention.alerts.map((alert) => ({
                 id: alert.id,
                 title: alert.title,
@@ -170,7 +141,8 @@ export function DashboardPage() {
             />
             <AttentionPanel
               title="Insights"
-              emptyMessage="No insights yet. Deterministic insight rules are installed and run in a later sprint."
+              to="/insights"
+              emptyMessage="No insights yet. Rules are evaluated after every import."
               items={overview.attention.insights.map((insight) => ({
                 id: insight.id,
                 title: insight.title,
@@ -240,14 +212,23 @@ function AttentionPanel({
   title,
   items,
   emptyMessage,
+  to,
 }: {
   title: string;
   items: Array<{ id: string; title: string; meta: string }>;
   emptyMessage: string;
+  to?: string;
 }) {
   return (
     <section className="card stack">
-      <h2 className="card__title">{title}</h2>
+      <div className="section-header">
+        <h2 className="card__title">{title}</h2>
+        {to ? (
+          <Link className="button button--ghost" to={to}>
+            See all
+          </Link>
+        ) : null}
+      </div>
       {items.length === 0 ? (
         <EmptyState message={emptyMessage} />
       ) : (

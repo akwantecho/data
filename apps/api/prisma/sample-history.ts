@@ -54,24 +54,44 @@ const BASELINES: Record<
   renewal_rate: { base: 72, growth: 0.002, season: 0.06, decimals: 2 },
 };
 
-/** Metrics that get a target, as a multiple of the first month's figure. */
-const TARGETS: Record<string, number> = {
-  revenue: 1.08,
+/**
+ * The last month does not simply continue the trend.
+ *
+ * A demonstration needs something to have gone wrong (plan §49): volume up while
+ * monetization slips, waiting times climbing as retention falls, a rate crossing
+ * the line it was given. These multipliers apply to the final month only, so the
+ * health score has a reason to move, an alert has a reason to fire and an insight
+ * has something true to say.
+ */
+const FINAL_MONTH_SHOCKS: Record<string, number> = {
+  // Healthcare: more patients through the door, each one worth less.
+  revenue: 0.93,
   patients: 1.05,
-  bookings: 1.06,
+  appointments: 1.05,
+  no_show_rate: 1.28,
+  average_waiting_time: 1.22,
+  patient_retention: 0.95,
+  // Hospitality: rooms filling at a discount, cancellations climbing.
   occupied_rooms: 1.04,
-  collection_rate: 1.02,
-  occupancy_rate: 1.03,
+  cancellation_rate: 1.3,
+  repeat_guest_rate: 0.95,
+  // Real estate: vacancy up, collections slipping.
+  vacant_units: 1.35,
+  occupied_units: 0.97,
+  collection_rate: 0.94,
+  maintenance_cost: 1.24,
 };
 
-/** Warning and critical limits, as a fraction of the target. */
-const THRESHOLDS: Record<string, { warning: number; critical: number }> = {
-  revenue: { warning: 92, critical: 85 },
-  no_show_rate: { warning: 110, critical: 125 },
-  cancellation_rate: { warning: 115, critical: 130 },
-  collection_rate: { warning: 96, critical: 90 },
-  occupancy_rate: { warning: 92, critical: 85 },
-};
+/**
+ * Warning and critical limits, as a percentage of the target.
+ *
+ * Direction decides which side of the target the lines sit on, so the defaults are
+ * expressed once rather than per metric.
+ */
+const RELATIVE_THRESHOLDS = {
+  HIGHER_IS_BETTER: { warning: 95, critical: 88 },
+  LOWER_IS_BETTER: { warning: 108, critical: 120 },
+} as const;
 
 const MONTHS = 12;
 
@@ -89,8 +109,16 @@ export async function seedSampleHistory(
 ): Promise<SampleHistoryResult> {
   const metrics = await prisma.metric.findMany({
     where: { organizationId, isActive: true },
-    select: { id: true, code: true, aggregationType: true, unit: true },
+    select: { id: true, code: true, aggregationType: true, unit: true, direction: true },
   });
+
+  // The metrics the installed health model weighs are the ones worth a target: a
+  // score can only be as complete as the benchmarks behind it.
+  const weighted = await prisma.healthMetricWeight.findMany({
+    where: { healthCategory: { healthModel: { organizationId } } },
+    select: { metric: { select: { code: true } } },
+  });
+  const scorable = new Set(weighted.map((row) => row.metric.code));
 
   const branches = await prisma.branch.findMany({
     where: { organizationId, isActive: true },
@@ -111,12 +139,19 @@ export async function seedSampleHistory(
     }
 
     for (const [index, month] of months.entries()) {
+      const isFinalMonth = index === months.length - 1;
+
       for (const [branchIndex, branch] of branches.entries()) {
-        const share = branches.length === 1 ? 1 : branchIndex === 0 ? 0.58 : 0.42;
-        const raw = figureFor(baseline, index, variance + branchIndex);
-        // A rate is the same rate in a smaller branch; a volume is a share of it.
-        const isRate = metric.unit === 'PERCENTAGE' || metric.unit === 'SCORE';
-        const value = isRate ? raw * (1 - branchIndex * 0.06) : raw * share;
+        const shock = isFinalMonth ? (FINAL_MONTH_SHOCKS[metric.code] ?? 1) : 1;
+        const value =
+          branchFigure(
+            baseline,
+            index,
+            variance,
+            branchIndex,
+            branches.length,
+            metric.aggregationType,
+          ) * shock;
 
         // PostgreSQL treats NULLs as distinct in a unique index, so the composite
         // key cannot be used while `departmentId` is null — matched explicitly, the
@@ -159,12 +194,28 @@ export async function seedSampleHistory(
       }
     }
 
-    const targetMultiple = TARGETS[metric.code];
-
-    if (targetMultiple) {
+    // A target on the final month for every metric the health model can score,
+    // set from the trend the month *would* have followed had nothing gone wrong.
+    // It is aggregated exactly as the engine aggregates the actuals — summed for
+    // volumes, averaged for rates — so the two are comparable; a target derived
+    // from a different shape would be a target nobody could be judged against.
+    if (scorable.has(metric.code)) {
       const latest = months.at(-1) as Month;
+      const perBranch = branches.map((_, branchIndex) =>
+        branchFigure(
+          baseline,
+          months.length - 1,
+          variance,
+          branchIndex,
+          branches.length,
+          metric.aggregationType,
+        ),
+      );
+
+      const expected = organizationFigure(perBranch, metric.aggregationType);
+
       const target = round(
-        figureFor(baseline, months.length - 1, variance) * targetMultiple,
+        metric.direction === 'LOWER_IS_BETTER' ? expected * 0.98 : expected * 1.02,
         baseline.decimals,
       );
 
@@ -198,23 +249,24 @@ export async function seedSampleHistory(
       }
 
       result.targets += 1;
-    }
 
-    const threshold = THRESHOLDS[metric.code];
+      const limits =
+        RELATIVE_THRESHOLDS[
+          metric.direction === 'LOWER_IS_BETTER' ? 'LOWER_IS_BETTER' : 'HIGHER_IS_BETTER'
+        ];
 
-    if (threshold) {
-      const existing = await prisma.metricThreshold.findFirst({
+      const existingThreshold = await prisma.metricThreshold.findFirst({
         where: { organizationId, metricId: metric.id },
         select: { id: true },
       });
 
-      if (!existing) {
+      if (!existingThreshold) {
         await prisma.metricThreshold.create({
           data: {
             organizationId,
             metricId: metric.id,
-            warningValue: threshold.warning,
-            criticalValue: threshold.critical,
+            warningValue: limits.warning,
+            criticalValue: limits.critical,
             isRelativeToTarget: true,
           },
         });
@@ -247,6 +299,52 @@ function recentMonths(count: number): Month[] {
   }
 
   return months;
+}
+
+/**
+ * One branch's figure.
+ *
+ * A metric that sums across branches is split between them; one that averages,
+ * or reports a stock, is reported by each branch at its own comparable level.
+ * This mirrors how the analytics engine rolls the branches back up (ADR-0010), so
+ * the seeded targets and the seeded values are on the same scale.
+ */
+function branchFigure(
+  baseline: (typeof BASELINES)[string],
+  monthIndex: number,
+  variance: number,
+  branchIndex: number,
+  branchCount: number,
+  aggregationType: string,
+): number {
+  const raw = figureFor(baseline, monthIndex, variance + branchIndex);
+
+  if (aggregationType === 'SUM') {
+    const share = branchCount === 1 ? 1 : branchIndex === 0 ? 0.58 : 0.42;
+
+    return raw * share;
+  }
+
+  return raw * (1 - branchIndex * 0.06);
+}
+
+/** How those branch figures become the organization's, per ADR-0010. */
+function organizationFigure(perBranch: number[], aggregationType: string): number {
+  if (perBranch.length === 0) {
+    return 0;
+  }
+
+  switch (aggregationType) {
+    case 'SUM':
+    case 'LAST':
+      return perBranch.reduce((total, value) => total + value, 0);
+    case 'MIN':
+      return Math.min(...perBranch);
+    case 'MAX':
+      return Math.max(...perBranch);
+    default:
+      return perBranch.reduce((total, value) => total + value, 0) / perBranch.length;
+  }
 }
 
 /**

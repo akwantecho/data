@@ -122,6 +122,39 @@ function renderDashboard(overrides: Record<string, { status?: number; body?: unk
     '/organizations/current': { body: organization },
     '/analytics/options': { body: options },
     '/dashboard/overview': { body: overview() },
+    // The health panel reads its own endpoint, so the score on the dashboard is
+    // always the one the health engine last calculated.
+    '/health/current': {
+      body: {
+        modelId: 'model-1',
+        modelName: 'Hospitality Health Model',
+        bands: [],
+        current: {
+          periodType: 'MONTH',
+          periodStart: '2026-02-01',
+          periodEnd: '2026-02-28',
+          branchId: null,
+          branchName: null,
+          overallScore: 67.29,
+          band: 'ATTENTION',
+          categories: [
+            {
+              code: 'financial',
+              name: 'Financial',
+              weight: '30.000',
+              effectiveWeight: '30.00',
+              score: 75,
+              band: 'ATTENTION',
+              metrics: [],
+            },
+          ],
+          unscoredMetrics: 0,
+          calculatedAt: '2026-03-01T09:00:00.000Z',
+        },
+        previous: null,
+        changePoints: -4.2,
+      },
+    },
     ...overrides,
   });
 
@@ -194,11 +227,12 @@ describe('DashboardPage', () => {
     });
   });
 
-  it('shows the health model without a score rather than a made-up one', async () => {
+  it('shows the health score the engine calculated, with its band', async () => {
     renderDashboard();
 
-    expect(await screen.findByText('Hospitality Health Model')).toBeInTheDocument();
-    expect(screen.getByText('Not scored yet')).toBeInTheDocument();
+    expect(await screen.findByText('67.29')).toBeInTheDocument();
+    expect(screen.getByText('ATTENTION')).toBeInTheDocument();
+    expect(screen.getByText('Financial')).toBeInTheDocument();
   });
 
   it('says there have been no imports instead of scoring quality zero', async () => {

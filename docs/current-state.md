@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: end of Sprint 6.
+Last updated: end of Sprint 7.
 
 ## Repository state before Sprint 0
 
@@ -9,37 +9,38 @@ inherited, adapted or removed; everything described below was created in Sprint 
 
 ## What exists now
 
-| Area                   | State                                                                                      |
-| ---------------------- | ------------------------------------------------------------------------------------------ |
-| Monorepo               | pnpm workspace: `apps/api`, `apps/web`, `packages/shared-types`, `packages/config`         |
-| API                    | NestJS 11 boots, `GET /api/health` reports API + database status                           |
-| Database               | PostgreSQL 16, full initial Prisma model, one applied migration                            |
-| Web                    | React 19 + Vite 7 boots, app shell, navigation, System Status page                         |
-| Shared vocabulary      | Roles, metric units/frequencies/directions, alert/goal/decision statuses, error envelope   |
-| Error contract         | `{ code, message, details }` via a global exception filter                                 |
-| Validation             | Zod for environment and DTOs (`ZodValidationPipe`)                                         |
-| Security baseline      | Helmet, CORS allow-list, rate limiting, 1 MB body cap, Nginx CSP                           |
-| Tooling                | ESLint 9 flat config, Prettier, Jest, Vitest, GitHub Actions CI                            |
-| Containers             | `docker-compose.yml` with db/api/web; multi-stage Dockerfiles                              |
-| Documentation          | Architecture, database, API, industry packs, analytics, 10 ADRs, this file                 |
-| Authentication         | Argon2id passwords, httpOnly cookie sessions, rotating refresh tokens with reuse detection |
-| Authorization          | Global auth guard, `@Roles` membership checks, `@PlatformAdminOnly` separation             |
-| Tenancy                | Organization scope from the session only; membership re-read per request                   |
-| Audit                  | `AuditService` writing before/after entries for organization and platform changes          |
-| Seed data              | Platform admin, 3 industries, 3 organizations with branches and 3 roles each               |
-| Organization structure | Industry selection, branches, departments, team management, settings UI                    |
-| Data import            | CSV upload → map → validate → commit, auditable rows, duplicate protection, quality score  |
-| Metrics engine         | Metrics CRUD, parsed formulas with a dependency graph, server-side calculation, targets    |
-| Industry packs         | Three MVP packs as validated data, catalogue sync, transactional non-destructive installer |
-| Dashboard & analytics  | Read-time aggregation, one-request dashboard, global filters, period and slice comparison  |
+| Area                     | State                                                                                      |
+| ------------------------ | ------------------------------------------------------------------------------------------ |
+| Monorepo                 | pnpm workspace: `apps/api`, `apps/web`, `packages/shared-types`, `packages/config`         |
+| API                      | NestJS 11 boots, `GET /api/health` reports API + database status                           |
+| Database                 | PostgreSQL 16, full initial Prisma model, one applied migration                            |
+| Web                      | React 19 + Vite 7 boots, app shell, navigation, System Status page                         |
+| Shared vocabulary        | Roles, metric units/frequencies/directions, alert/goal/decision statuses, error envelope   |
+| Error contract           | `{ code, message, details }` via a global exception filter                                 |
+| Validation               | Zod for environment and DTOs (`ZodValidationPipe`)                                         |
+| Security baseline        | Helmet, CORS allow-list, rate limiting, 1 MB body cap, Nginx CSP                           |
+| Tooling                  | ESLint 9 flat config, Prettier, Jest, Vitest, GitHub Actions CI                            |
+| Containers               | `docker-compose.yml` with db/api/web; multi-stage Dockerfiles                              |
+| Documentation            | Architecture, database, API, industry packs, analytics, 11 ADRs, this file                 |
+| Authentication           | Argon2id passwords, httpOnly cookie sessions, rotating refresh tokens with reuse detection |
+| Authorization            | Global auth guard, `@Roles` membership checks, `@PlatformAdminOnly` separation             |
+| Tenancy                  | Organization scope from the session only; membership re-read per request                   |
+| Audit                    | `AuditService` writing before/after entries for organization and platform changes          |
+| Seed data                | Platform admin, 3 industries, 3 organizations with branches and 3 roles each               |
+| Organization structure   | Industry selection, branches, departments, team management, settings UI                    |
+| Data import              | CSV upload → map → validate → commit, auditable rows, duplicate protection, quality score  |
+| Metrics engine           | Metrics CRUD, parsed formulas with a dependency graph, server-side calculation, targets    |
+| Industry packs           | Three MVP packs as validated data, catalogue sync, transactional non-destructive installer |
+| Dashboard & analytics    | Read-time aggregation, one-request dashboard, global filters, period and slice comparison  |
+| Health, alerts, insights | Weighted health scoring with a full breakdown, alert workflow, deterministic insights      |
 
 ## Verified locally
 
 - `pnpm -r lint` — clean
 - `pnpm -r typecheck` — clean
 - `pnpm -r build` — API, web and shared types all build
-- `pnpm -r test` — 233 API unit tests, 92 web tests
-- `pnpm --filter @sip/api test:e2e` — 163 integration tests against real PostgreSQL
+- `pnpm -r test` — 308 API unit tests, 110 web tests
+- `pnpm --filter @sip/api test:e2e` — 185 integration tests against real PostgreSQL
 - `prisma migrate deploy` + `prisma migrate diff --exit-code` — migrations reproduce the schema
 - API booted from `dist`: login → `/auth/me` → `/organizations/current` → refresh → logout,
   with platform routes refused to tenants and tenant routes refused to platform staff
@@ -53,6 +54,15 @@ inherited, adapted or removed; everything described below was created in Sprint 
   a bad formula refused with the server's reason, two hand-entered values producing a
   calculated `net_profit` (29,650) and `net_margin` (23.0919%), and a target and
   thresholds driving the status badge — values confirmed directly in PostgreSQL
+- Full browser run of health, alerts and insights: the dashboard health panel showing
+  67.29 ATTENTION with its five categories, "Why" opening Patient Experience down to
+  Patient Retention 63.38 against a target of 68.05 scoring 50.69; the alerts list with
+  its evidence drawer, an acknowledgement recorded with actor and note, and a viewer
+  seeing only "Close"; and the insights feed carrying the plan's own examples with the
+  figures and the condition each one satisfied
+- Full run of the plan §49 demonstration through the API: importing a month of worse
+  figures moved the health score 67.29 → 29.15 (−38.14), raised three alerts including
+  the no-show breach, and generated the insights that explain it — all from one commit
 - Full browser run of the dashboard and analytics: KPI cards with period-over-period
   change, a branch filter moving every panel at once (OMR 2.7M → 1.2M), a range
   preset moving the window and the comparison window with it, and RevPAR on the
@@ -79,10 +89,8 @@ is proven until someone runs it on a machine with Docker.
 
 ## Not built yet (by design)
 
-Health scoring, alert generation and insight evaluation (Sprint 7), goals and
-decisions (8), AI analyst (9), reports and production hardening (10). The health
-model and the rules are installed, inspectable and shown on the dashboard without a
-score; the engines that read them are Sprint 7.
+Goals and decisions (Sprint 8), AI analyst (9), reports and production hardening
+(10).
 
 ## Deviations from the plan document
 
@@ -138,6 +146,12 @@ score; the engines that read them are Sprint 7.
 16. **Aggregation is read-time only.** No rollup tables: a window figure is computed
     on request from stored values, so a corrected month cannot leave a stale total
     behind.
-17. **Seed data landed in Sprint 1 rather than Sprint 10.** Plan §48 asks for seeds
+17. **A target stands until it is replaced** (ADR-0011). The plan does not say either
+    way; requiring a target per period would leave every newly imported month
+    unscoreable, which is the opposite of what §49 asks for.
+18. **Organizational health shares the `/health` prefix** with the unauthenticated
+    liveness probe: `GET /health` stays public and carries no tenant data, while
+    `/health/current` and `/health/history` are tenant-scoped. A test asserts both.
+19. **Seed data landed in Sprint 1 rather than Sprint 10.** Plan §48 asks for seeds
     that make the interface demonstrable immediately, and login is not demonstrable
     without users. Metric, goal and decision seeds still follow later.
